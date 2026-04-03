@@ -22,7 +22,7 @@ Project LifeLedger/
       lib/
       hooks/
       styles/
-    .env.example
+    .env
     package.json
     vercel.json
   backend/                   # Node + Express + Firebase Admin + MongoDB
@@ -38,12 +38,12 @@ Project LifeLedger/
       utils/
       app.js
       server.js
-    .env.example
+    .env
     package.json
   ai-service/                # FastAPI + scikit-learn + pandas + numpy
     app/main.py
     requirements.txt
-    .env.example
+    .env
   render.yaml
   README.md
 ```
@@ -225,7 +225,7 @@ App URLs:
 2. Framework preset: **Vite**.
 3. Build command: `npm run build`
 4. Output directory: `dist`
-5. Add frontend env vars from `.env.example`.
+5. Add frontend env vars from `.env`.
 6. Deploy.
 
 ### Backend to Render
@@ -234,7 +234,7 @@ App URLs:
 2. Root directory: `backend`
 3. Build command: `npm install`
 4. Start command: `npm start`
-5. Add backend env vars from `.env.example`.
+5. Add backend env vars from `.env`.
 6. Set `CLIENT_URL` to deployed Vercel URL.
 7. Deploy.
 
