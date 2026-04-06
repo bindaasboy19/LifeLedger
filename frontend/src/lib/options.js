@@ -1,9 +1,8 @@
 export const roles = [
-  { value: 'user', label: 'Patient / Attendant' },
-  { value: 'donor', label: 'Donor' },
+  { value: 'user', label: 'Community Member' },
+  { value: 'ngo', label: 'NGO / Organizer' },
   { value: 'hospital', label: 'Hospital' },
-  { value: 'blood_bank', label: 'Blood Bank' },
-  { value: 'admin', label: 'Admin' }
+  { value: 'blood_bank', label: 'Blood Bank' }
 ];
 
 export const bloodGroups = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];

@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { db } from '../config/firebase.js';
 import { env } from '../config/env.js';
 import { broadcastNotifications, sendEmailBatch } from '../services/notificationService.js';
+import { COMMUNITY_ROLES } from '../utils/constants.js';
 
 const shouldSendDayBefore = (startAt) => {
   const now = new Date();
@@ -17,9 +18,11 @@ const shouldSendDayOf = (startAt) => {
 };
 
 const notifyCamp = async (camp, label) => {
-  const donorSnapshot = await db.collection('users').where('role', '==', 'donor').get();
-  const recipients = donorSnapshot.docs
-    .map((doc) => ({ uid: doc.id, ...doc.data() }))
+  const snapshots = await Promise.all(
+    COMMUNITY_ROLES.map((role) => db.collection('users').where('role', '==', role).get())
+  );
+  const recipients = snapshots
+    .flatMap((snapshot) => snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() })))
     .filter((donor) => camp.requiredBloodGroups?.includes(donor.bloodGroup));
 
   if (recipients.length === 0) return;

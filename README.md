@@ -166,9 +166,11 @@ Seed includes:
 
 - 3 hospitals
 - 2 blood banks
+- 1 NGO organizer
 - 10 donors (mixed blood groups)
 - 5 SOS history records
 - 3 upcoming camps
+- sample camp applications and one generated donation certificate
 - AI training dataset (historical multi-region records)
 - Firestore + Mongo + Firebase Auth demo users
 - Additional prototype seeding script for live stock/SOS/camp activity generation
@@ -181,11 +183,13 @@ Demo@12345
 
 Sample seeded login emails:
 
-- `admin@lifeledger.demo`
 - `user@lifeledger.demo`
+- `ngo1@lifeledger.demo`
 - `hospital1@lifeledger.demo`
 - `bloodbank1@lifeledger.demo`
 - `donor1@lifeledger.demo`
+
+Admin accounts are intentionally not listed for public sign-up or public demo access. Create or manage admin profiles directly from backend seed/data operations only.
 
 ## 6) Run Locally
 
@@ -226,6 +230,8 @@ App URLs:
 3. Build command: `npm run build`
 4. Output directory: `dist`
 5. Add frontend env vars from `.env`.
+   - `VITE_API_BASE_URL` can be either `https://your-backend.onrender.com` or `https://your-backend.onrender.com/api`.
+   - After changing any Vercel env var, redeploy the frontend so Vite rebuilds with the new value.
 6. Deploy.
 
 ### Backend to Render
@@ -236,6 +242,8 @@ App URLs:
 4. Start command: `npm start`
 5. Add backend env vars from `.env`.
 6. Set `CLIENT_URL` to deployed Vercel URL.
+   - Use the full origin with scheme, for example `https://life-ledger-rose.vercel.app`.
+   - If you use multiple Vercel domains, separate them with commas.
 7. Deploy.
 
 ### AI Service to Render

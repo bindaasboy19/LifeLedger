@@ -3,11 +3,17 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { firestore } from '../../lib/firebase.js';
 import { listSOSRequests } from './sosApi.js';
 
-export const useRealtimeSOS = (profile) => {
+export const useRealtimeSOS = (profile, { enabled = true } = {}) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!enabled) {
+      setItems([]);
+      setLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     const loadFromApi = async () => {
@@ -46,7 +52,7 @@ export const useRealtimeSOS = (profile) => {
       active = false;
       unsub();
     };
-  }, []);
+  }, [enabled]);
 
   const filtered = useMemo(() => {
     if (!profile) return items;

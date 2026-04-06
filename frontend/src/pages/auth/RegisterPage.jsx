@@ -38,7 +38,7 @@ export default function RegisterPage() {
         phone: form.phone,
         role: form.role,
         bloodGroup: form.bloodGroup,
-        ...(form.role === 'donor' || form.role === 'user' || form.role === 'hospital'
+        ...(form.role === 'user' || form.role === 'donor' || form.role === 'hospital'
           ? { availabilityStatus: true }
           : {}),
         location: {
@@ -70,7 +70,7 @@ export default function RegisterPage() {
         </Link>
         <h1 className="text-3xl font-extrabold">Create Your Account</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Join as a donor, user, hospital, blood bank, or admin.
+          Join as a community member, NGO, hospital, or blood bank. Admin access is provisioned privately.
         </p>
         <div className="grid gap-3 md:grid-cols-2">
           <input

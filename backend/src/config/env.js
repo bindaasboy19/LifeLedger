@@ -25,6 +25,23 @@ const normalizePrivateKey = (value) => {
   return `-----BEGIN PRIVATE KEY-----\n${withLines}\n-----END PRIVATE KEY-----\n`;
 };
 
+const normalizeOrigin = (value) => {
+  const cleaned = clean(value);
+  if (!cleaned) return null;
+
+  const withScheme = /^https?:\/\//i.test(cleaned)
+    ? cleaned
+    : cleaned.includes('localhost') || cleaned.includes('127.0.0.1')
+      ? `http://${cleaned}`
+      : `https://${cleaned}`;
+
+  try {
+    return new URL(withScheme).origin;
+  } catch {
+    return null;
+  }
+};
+
 const required = ['MONGODB_URI'];
 required.forEach((key) => {
   if (!process.env[key]) {
@@ -35,7 +52,7 @@ required.forEach((key) => {
 
 const clientUrls = (clean(process.env.CLIENT_URL || 'http://localhost:5173') || '')
   .split(',')
-  .map((value) => value.trim())
+  .map((value) => normalizeOrigin(value.trim()))
   .filter(Boolean);
 
 export const env = {

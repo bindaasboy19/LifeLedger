@@ -6,7 +6,7 @@ import { requireMongo } from '../middleware/requireMongo.js';
 
 const router = Router();
 
-router.use(authenticate, authorize(['admin', 'hospital', 'blood_bank']), requireMongo);
+router.use(authenticate, authorize(['admin', 'hospital', 'blood_bank', 'ngo']), requireMongo);
 router.post('/predict', getPrediction);
 
 export default router;

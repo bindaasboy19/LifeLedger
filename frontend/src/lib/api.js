@@ -13,7 +13,27 @@ const cleanEnv = (value) => {
   return trimmed;
 };
 
-const API_BASE_URL = cleanEnv(import.meta.env.VITE_API_BASE_URL) || 'http://localhost:5000/api';
+const normalizeApiBaseUrl = (value) => {
+  const cleaned = cleanEnv(value);
+  if (!cleaned) return 'http://localhost:5000/api';
+
+  const withScheme = /^https?:\/\//i.test(cleaned)
+    ? cleaned
+    : cleaned.includes('localhost') || cleaned.includes('127.0.0.1')
+      ? `http://${cleaned}`
+      : `https://${cleaned}`;
+
+  try {
+    const url = new URL(withScheme);
+    const pathname = url.pathname.replace(/\/+$/, '');
+    url.pathname = pathname.endsWith('/api') ? pathname : `${pathname || ''}/api`;
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return 'http://localhost:5000/api';
+  }
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

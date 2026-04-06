@@ -10,6 +10,13 @@ export const createApp = () => {
   const app = express();
   const allowedOrigins = new Set(env.clientUrls);
   const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
+  const normalizeOrigin = (origin) => {
+    try {
+      return new URL(origin).origin;
+    } catch {
+      return origin;
+    }
+  };
 
   app.use(
     cors({
@@ -19,7 +26,9 @@ export const createApp = () => {
           return;
         }
 
-        if (allowedOrigins.has(origin) || localhostPattern.test(origin)) {
+        const normalizedOrigin = normalizeOrigin(origin);
+
+        if (allowedOrigins.has(normalizedOrigin) || localhostPattern.test(normalizedOrigin)) {
           callback(null, true);
           return;
         }

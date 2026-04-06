@@ -2,6 +2,7 @@ import { db } from '../config/firebase.js';
 import { SosHistory } from '../models/SosHistory.js';
 import { AITrainingData } from '../models/AITrainingData.js';
 import { DonationHistory } from '../models/DonationHistory.js';
+import { COMMUNITY_ROLES } from '../utils/constants.js';
 
 const BLOOD_GROUPS = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
 
@@ -153,8 +154,10 @@ const seedAITrainingSignals = async () => {
 };
 
 export const seedPrototypeActivity = async ({ actorUid = 'admin_1' } = {}) => {
-  const donorSnapshot = await db.collection('users').where('role', '==', 'donor').get();
-  const donors = donorSnapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+  const communitySnapshot = await db.collection('users').get();
+  const donors = communitySnapshot.docs
+    .map((doc) => ({ uid: doc.id, ...doc.data() }))
+    .filter((user) => COMMUNITY_ROLES.includes(user.role) && user.availabilityStatus !== false);
 
   const stocks = Array.from({ length: 6 }).map((_, idx) => buildStockEntry(idx));
   await Promise.all(

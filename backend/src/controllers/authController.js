@@ -1,6 +1,6 @@
 import { db } from '../config/firebase.js';
 import { asyncHandler, AppError } from '../utils/http.js';
-import { ROLES } from '../utils/constants.js';
+import { COMMUNITY_ROLES, ROLES } from '../utils/constants.js';
 
 const enforceRoleRules = (profile) => {
   if (!profile.displayName) {
@@ -18,7 +18,24 @@ const enforceRoleRules = (profile) => {
 };
 
 const shouldDefaultAvailability = (role) =>
-  [ROLES.DONOR, ROLES.USER, ROLES.HOSPITAL].includes(role);
+  [...COMMUNITY_ROLES, ROLES.HOSPITAL].includes(role);
+
+const isCommunityRole = (role) => COMMUNITY_ROLES.includes(role);
+
+const assertRoleAssignmentAllowed = (requestedRole, existingProfile) => {
+  if (requestedRole !== ROLES.ADMIN) {
+    return;
+  }
+
+  if (existingProfile?.role === ROLES.ADMIN) {
+    return;
+  }
+
+  throw new AppError(
+    'Admin profiles are private and can only be provisioned directly from the backend or database.',
+    403
+  );
+};
 
 export const upsertProfile = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
@@ -32,10 +49,15 @@ export const upsertProfile = asyncHandler(async (req, res) => {
   const existing = await userRef.get();
   const existingProfile = existing.exists ? existing.data() : null;
 
-  if (existingProfile?.role && existingProfile.role !== payload.role) {
+  if (
+    existingProfile?.role &&
+    existingProfile.role !== payload.role &&
+    !(isCommunityRole(existingProfile.role) && isCommunityRole(payload.role))
+  ) {
     throw new AppError('Role cannot be changed after profile creation', 403);
   }
 
+  assertRoleAssignmentAllowed(payload.role, existingProfile);
   enforceRoleRules(payload);
 
   if (shouldDefaultAvailability(payload.role) && payload.availabilityStatus === undefined) {
@@ -47,7 +69,7 @@ export const upsertProfile = asyncHandler(async (req, res) => {
     ...payload,
     uid,
     email,
-    isVerified: existing.exists ? existingProfile.isVerified : payload.role === ROLES.ADMIN,
+    isVerified: existing.exists ? existingProfile.isVerified : false,
     isBlocked: existing.exists ? existingProfile.isBlocked : false,
     updatedAt: new Date().toISOString(),
     createdAt: existing.exists ? existingProfile.createdAt : new Date().toISOString()

@@ -53,7 +53,7 @@ export default function DonorPanel() {
   const cooldownRemaining = elapsed !== null ? Math.max(0, 90 - elapsed) : 0;
 
   return (
-    <SectionCard title="Donor Coordination" subtitle="Availability and cooldown management">
+    <SectionCard title="Donation Readiness" subtitle="Availability, cooldown, and community donation records">
       <form onSubmit={onSave} className="grid gap-2 md:grid-cols-5">
         <select
           value={form.bloodGroup}
@@ -89,7 +89,7 @@ export default function DonorPanel() {
           onChange={(event) => setForm((prev) => ({ ...prev, lastDonationDate: event.target.value }))}
           className="rounded-lg border border-slate-300 px-2 py-2 dark:border-slate-700 dark:bg-slate-900"
         />
-        <button className="rounded-lg bg-brand-600 px-3 py-2 text-white">Save Donor Profile</button>
+        <button className="rounded-lg bg-brand-600 px-3 py-2 text-white">Save Donation Profile</button>
       </form>
 
       <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">

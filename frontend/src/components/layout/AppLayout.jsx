@@ -6,8 +6,9 @@ import ThemeToggle from './ThemeToggle.jsx';
 import NotificationBell from './NotificationBell.jsx';
 
 const roleLabels = {
-  user: 'User',
-  donor: 'Donor',
+  user: 'Community Member',
+  donor: 'Community Donor',
+  ngo: 'NGO Organizer',
   hospital: 'Hospital',
   blood_bank: 'Blood Bank',
   admin: 'Admin'
@@ -52,7 +53,7 @@ export default function AppLayout({ children, tabs = [], activeTab = 'overview' 
         </div>
       </header>
 
-      <nav className="mb-6 flex flex-wrap gap-2">
+      <nav className="mb-6 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           const href = tab.id === 'overview' ? '/dashboard' : `/dashboard?tab=${tab.id}`;
@@ -61,7 +62,7 @@ export default function AppLayout({ children, tabs = [], activeTab = 'overview' 
             <Link
               key={tab.id}
               to={href}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
                 isActive
                   ? 'bg-gradient-to-r from-brand-600 to-cyan-500 text-white shadow-lg shadow-brand-600/30'
                   : 'border border-slate-300 bg-white/75 text-slate-700 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:bg-slate-800'

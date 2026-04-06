@@ -12,7 +12,7 @@ const blogCards = [
   {
     title: 'How Transparent Stock Flow Builds Trust',
     summary:
-      'Live stock movement visibility helps patients, donors, hospitals, and blood banks align on the same operational picture.',
+      'Live stock movement visibility helps community members, NGOs, hospitals, and blood banks align on the same operational picture.',
     tag: 'Insight'
   },
   {
@@ -67,7 +67,7 @@ export default function OverviewPanel({ profile, stockItems, sosItems, campItems
           <div className="rounded-2xl border border-rose-200/70 bg-gradient-to-br from-rose-50 to-red-100/80 p-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:to-red-900/20">
             <h3 className="text-base font-bold text-rose-800 dark:text-rose-200">Our Aim</h3>
             <p className="mt-2 text-sm text-rose-700 dark:text-rose-100/90">
-              Reduce avoidable treatment delay by connecting blood demand, donor response, and institutional stock in one live workflow.
+              Reduce avoidable treatment delay by connecting blood demand, community response, NGO-led camps, and institutional stock in one live workflow.
             </p>
           </div>
           <div className="rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-blue-100/80 p-4 dark:border-cyan-900/40 dark:from-cyan-950/40 dark:to-blue-900/20">

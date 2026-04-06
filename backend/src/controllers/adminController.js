@@ -5,13 +5,14 @@ import { DonationHistory } from '../models/DonationHistory.js';
 import { AITrainingData } from '../models/AITrainingData.js';
 import { logAudit } from '../services/auditService.js';
 import { seedPrototypeActivity } from '../services/prototypeSeedService.js';
+import { VERIFIED_ORGANIZATION_ROLES } from '../utils/constants.js';
 
 export const listVerificationQueue = asyncHandler(async (_req, res) => {
   const snapshot = await db.collection('users').get();
 
   const queue = snapshot.docs
     .map((doc) => ({ uid: doc.id, ...doc.data() }))
-    .filter((user) => ['hospital', 'blood_bank'].includes(user.role) && !user.isVerified);
+    .filter((user) => VERIFIED_ORGANIZATION_ROLES.includes(user.role) && !user.isVerified);
 
   res.json({ success: true, data: queue });
 });

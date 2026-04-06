@@ -23,11 +23,19 @@ const tabsByRole = {
   user: [
     { id: 'overview', label: 'Overview', module: 'overview' },
     { id: 'profile', label: 'Profile', module: 'profile' },
+    { id: 'donor', label: 'Donation', module: 'donor' },
     { id: 'stock', label: 'Stock', module: 'stock' },
     { id: 'search', label: 'Find Blood', module: 'search' },
     { id: 'flow', label: 'Stock Flow', module: 'flow' },
     { id: 'sos', label: 'SOS', module: 'sos' },
     { id: 'camps', label: 'Camps', module: 'camps' },
+    { id: 'notifications', label: 'Notifications', module: 'notifications' }
+  ],
+  ngo: [
+    { id: 'overview', label: 'Overview', module: 'overview' },
+    { id: 'profile', label: 'Profile', module: 'profile' },
+    { id: 'camps', label: 'Camps', module: 'camps' },
+    { id: 'prediction', label: 'AI Prediction', module: 'prediction' },
     { id: 'notifications', label: 'Notifications', module: 'notifications' }
   ],
   donor: [
@@ -85,12 +93,13 @@ export default function DashboardPage() {
   const requestedTab = searchParams.get('tab') || 'overview';
   const activeTab = tabs.some((tab) => tab.id === requestedTab) ? requestedTab : 'overview';
   const activeModule = tabs.find((tab) => tab.id === activeTab)?.module || 'overview';
+  const loadOverviewStreams = activeModule === 'overview';
 
   useRealtimeNotifications(profile?.uid);
 
-  const stock = useRealtimeStock();
-  const sos = useRealtimeSOS(profile);
-  const camps = useRealtimeCamps();
+  const stock = useRealtimeStock({ enabled: loadOverviewStreams });
+  const sos = useRealtimeSOS(profile, { enabled: loadOverviewStreams });
+  const camps = useRealtimeCamps({ enabled: loadOverviewStreams });
 
   if (!profile && authError) {
     return (

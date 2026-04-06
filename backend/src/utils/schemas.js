@@ -96,6 +96,26 @@ export const campUpdateSchema = campSchema.partial().refine((data) => Object.key
   message: 'At least one field must be provided'
 });
 
+export const campApplicationCreateSchema = z.object({
+  notes: z.string().max(500).optional()
+});
+
+export const campApplicationUpdateSchema = z
+  .object({
+    status: z.enum(['approved', 'rejected', 'completed']),
+    notes: z.string().max(500).optional(),
+    units: z.number().int().min(1).max(5).optional()
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === 'completed' && data.units === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['units'],
+        message: 'Units are required when completing a donation'
+      });
+    }
+  });
+
 export const adminVerifySchema = z.object({
   isVerified: z.boolean()
 });

@@ -3,6 +3,7 @@ import { connectMongo, disconnectMongo } from '../config/mongo.js';
 import { auth, db } from '../config/firebase.js';
 import { SosHistory } from '../models/SosHistory.js';
 import { DonationHistory } from '../models/DonationHistory.js';
+import { DonationCertificate } from '../models/DonationCertificate.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { AITrainingData } from '../models/AITrainingData.js';
 
@@ -67,6 +68,18 @@ const bloodBanks = [
   }
 ];
 
+const ngos = [
+  {
+    uid: 'ngo_1',
+    displayName: 'Helping Hands NGO',
+    role: 'ngo',
+    isVerified: true,
+    email: 'ngo1@lifeledger.demo',
+    bloodGroup: 'A+',
+    location: { city: 'Mumbai', address: 'Dadar Community Hub', lat: 19.018, lng: 72.843 }
+  }
+];
+
 const donors = Array.from({ length: 10 }).map((_, index) => {
   const groups = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+', 'A+', 'O+'];
   const cities = ['Delhi', 'Delhi', 'Mumbai', 'Mumbai', 'Bengaluru', 'Bengaluru', 'Delhi', 'Mumbai', 'Bengaluru', 'Delhi'];
@@ -94,6 +107,7 @@ const donors = Array.from({ length: 10 }).map((_, index) => {
 const users = [
   ...hospitals,
   ...bloodBanks,
+  ...ngos,
   ...donors,
   {
     uid: 'admin_1',
@@ -106,15 +120,18 @@ const users = [
   },
   {
     uid: 'user_1',
-    displayName: 'Patient User',
+    displayName: 'Community Member One',
     role: 'user',
     isVerified: true,
     email: 'user@lifeledger.demo',
     bloodGroup: 'O+',
+    availabilityStatus: true,
     location: { city: 'Delhi', lat: 28.62, lng: 77.2, address: 'Demo User Address' }
   }
 ].map((user) => ({
   ...user,
+  availabilityStatus:
+    user.availabilityStatus ?? (['user', 'donor', 'hospital'].includes(user.role) ? true : undefined),
   phone: '+910000000000',
   isBlocked: false,
   createdAt: now.toISOString(),
@@ -269,15 +286,16 @@ const camps = [
   },
   {
     id: 'camp_2',
-    name: 'Mumbai Donor Rally',
-    organizer: 'Metro Heart Institute',
+    name: 'Mumbai Community Donation Drive',
+    organizer: 'Helping Hands NGO',
     startAt: new Date(now.getTime() + 5 * 86400000).toISOString(),
     endAt: new Date(now.getTime() + 5.5 * 86400000).toISOString(),
-    location: hospitals[1].location,
+    location: ngos[0].location,
     requiredBloodGroups: ['A-', 'AB+', 'O+'],
     contactDetails: { email: 'camp2@lifeledger.demo', phone: '+922222222222' },
-    description: 'Community donor rally',
-    createdBy: hospitals[1].uid
+    description: 'NGO-led community donation drive',
+    createdBy: ngos[0].uid,
+    createdByRole: ngos[0].role
   },
   {
     id: 'camp_3',
@@ -289,14 +307,72 @@ const camps = [
     requiredBloodGroups: ['B-', 'AB-', 'O-'],
     contactDetails: { email: 'camp3@lifeledger.demo', phone: '+933333333333' },
     description: 'Weekend emergency stock-up camp',
-    createdBy: hospitals[2].uid
+    createdBy: hospitals[2].uid,
+    createdByRole: hospitals[2].role
   }
 ].map((camp) => ({
   ...camp,
+  createdByRole: camp.createdByRole || 'hospital',
   createdAt: now.toISOString(),
   updatedAt: now.toISOString(),
   remindersSent: {}
 }));
+
+const campApplications = [
+  {
+    id: 'camp_app_1',
+    campId: 'camp_2',
+    campName: 'Mumbai Community Donation Drive',
+    applicantUid: 'user_1',
+    applicantName: 'Community Member One',
+    applicantEmail: 'user@lifeledger.demo',
+    bloodGroup: 'O+',
+    notes: 'Available to donate during the second half of the camp.',
+    status: 'completed',
+    organizerUid: 'ngo_1',
+    reviewedBy: 'ngo_1',
+    reviewedByRole: 'ngo',
+    reviewNotes: 'Donation completed and certificate issued.',
+    units: 1,
+    donationRecordId: 'seed_donation_user_1',
+    certificateId: 'seed_certificate_user_1',
+    certificateNumber: 'LL-SEED-USER1-0001',
+    completedAt: new Date(now.getTime() - 12 * 86400000).toISOString(),
+    createdAt: new Date(now.getTime() - 14 * 86400000).toISOString(),
+    updatedAt: new Date(now.getTime() - 12 * 86400000).toISOString()
+  },
+  {
+    id: 'camp_app_2',
+    campId: 'camp_2',
+    campName: 'Mumbai Community Donation Drive',
+    applicantUid: 'donor_3',
+    applicantName: 'Demo Donor 3',
+    applicantEmail: 'donor3@lifeledger.demo',
+    bloodGroup: 'A-',
+    notes: 'Can arrive in the morning slot.',
+    status: 'approved',
+    organizerUid: 'ngo_1',
+    reviewedBy: 'ngo_1',
+    reviewedByRole: 'ngo',
+    reviewNotes: 'Approved for slot allocation.',
+    createdAt: new Date(now.getTime() - 2 * 86400000).toISOString(),
+    updatedAt: new Date(now.getTime() - 36 * 3600000).toISOString()
+  },
+  {
+    id: 'camp_app_3',
+    campId: 'camp_1',
+    campName: 'Save Lives Delhi Camp',
+    applicantUid: 'donor_7',
+    applicantName: 'Demo Donor 7',
+    applicantEmail: 'donor7@lifeledger.demo',
+    bloodGroup: 'AB-',
+    notes: 'Interested in emergency mobilization.',
+    status: 'pending',
+    organizerUid: 'hospital_1',
+    createdAt: new Date(now.getTime() - 24 * 3600000).toISOString(),
+    updatedAt: new Date(now.getTime() - 24 * 3600000).toISOString()
+  }
+];
 
 const clearFirestoreCollection = async (name) => {
   const snapshot = await db.collection(name).get();
@@ -312,6 +388,7 @@ const seedFirestore = async (reset) => {
       clearFirestoreCollection('stock_flow'),
       clearFirestoreCollection('sos_requests'),
       clearFirestoreCollection('donation_camps'),
+      clearFirestoreCollection('camp_applications'),
       clearFirestoreCollection('notifications')
     ]);
   }
@@ -374,17 +451,31 @@ const seedFirestore = async (reset) => {
   );
 
   await Promise.all(
-    donors.slice(0, 5).map((donor, idx) =>
+    campApplications.map((application) =>
+      db
+        .collection('camp_applications')
+        .doc(application.id)
+        .set(application, { merge: true })
+    )
+  );
+
+  await Promise.all(
+    [...donors.slice(0, 4), users.find((user) => user.uid === 'user_1'), ngos[0]].filter(Boolean).map((user, idx) =>
       db
         .collection('notifications')
         .doc(`notification_${idx + 1}`)
         .set({
-          userUid: donor.uid,
-          title: 'Welcome to LifeLedger',
-          message: 'Your donor dashboard is ready.',
-          type: 'system',
-          referenceId: null,
-          metadata: {},
+          userUid: user.uid,
+          title: idx === 5 ? 'Camp Applications Incoming' : 'Welcome to LifeLedger',
+          message:
+            user.uid === 'user_1'
+              ? 'Your community profile can now both request blood and apply for donation camps.'
+              : user.uid === 'ngo_1'
+                ? 'Your NGO dashboard can now manage camps, donor applications, and future demand signals.'
+                : 'Your donation readiness dashboard is ready.',
+          type: idx === 5 ? 'camp' : 'system',
+          referenceId: idx === 5 ? 'camp_2' : null,
+          metadata: idx === 5 ? { seeded: true } : {},
           read: false,
           createdAt: now.toISOString()
         })
@@ -421,6 +512,7 @@ const seedMongo = async (reset) => {
     await Promise.all([
       SosHistory.deleteMany({}),
       DonationHistory.deleteMany({}),
+      DonationCertificate.deleteMany({}),
       AuditLog.deleteMany({}),
       AITrainingData.deleteMany({})
     ]);
@@ -451,7 +543,35 @@ const seedMongo = async (reset) => {
     donatedAt: new Date(now.getTime() - (100 + idx) * 86400000)
   }));
 
+  donationHistory.push({
+    donorUid: 'user_1',
+    campId: 'camp_2',
+    bloodGroup: 'O+',
+    units: 1,
+    location: ngos[0].location,
+    donatedAt: new Date(now.getTime() - 12 * 86400000)
+  });
+
   await DonationHistory.insertMany(donationHistory, { ordered: false }).catch(() => {});
+
+  await DonationCertificate.insertMany(
+    [
+      {
+        certificateNumber: 'LL-SEED-USER1-0001',
+        donorUid: 'user_1',
+        donorName: 'Community Member One',
+        campId: 'camp_2',
+        campName: 'Mumbai Community Donation Drive',
+        applicationId: 'camp_app_1',
+        organizerUid: 'ngo_1',
+        organizerName: 'Helping Hands NGO',
+        bloodGroup: 'O+',
+        units: 1,
+        issuedAt: new Date(now.getTime() - 12 * 86400000)
+      }
+    ],
+    { ordered: false }
+  ).catch(() => {});
 
   const aiRows = [];
   for (let day = 120; day >= 1; day -= 1) {

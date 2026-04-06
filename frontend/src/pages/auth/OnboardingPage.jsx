@@ -29,7 +29,7 @@ export default function OnboardingPage() {
         phone: form.phone,
         role: form.role,
         bloodGroup: form.bloodGroup,
-        ...(form.role === 'donor' || form.role === 'user' || form.role === 'hospital'
+        ...(form.role === 'user' || form.role === 'donor' || form.role === 'hospital'
           ? { availabilityStatus: true }
           : {}),
         location: {
@@ -57,7 +57,7 @@ export default function OnboardingPage() {
         </Link>
         <h1 className="text-3xl font-extrabold">Complete Your Profile</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Finalize role details to unlock your dashboard modules.
+          Finalize role details to unlock your dashboard modules. Admin access is not available from public onboarding.
         </p>
         <input
           required

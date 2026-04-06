@@ -8,7 +8,7 @@ const featureCards = [
   },
   {
     title: 'SOS Emergency Mesh',
-    description: 'Instant donor matching based on compatibility, location, and active availability signals.'
+    description: 'Instant responder matching based on compatibility, location, and active availability signals.'
   },
   {
     title: 'Predictive Preparedness',
@@ -20,7 +20,7 @@ const highlights = [
   {
     label: 'About Us',
     heading: 'LifeLedger connects urgency with action.',
-    text: 'We built LifeLedger to remove delays in blood response through coordinated hospitals, donors, and administrators.'
+    text: 'We built LifeLedger to remove delays in blood response through coordinated community members, NGOs, hospitals, and administrators.'
   },
   {
     label: 'Aims & Vision',
@@ -42,13 +42,17 @@ const metrics = [
 ];
 
 const roleJourneys = {
-  user: {
-    title: 'Patient / Attendant',
-    steps: ['Search nearest blood source', 'Trigger SOS in one tap', 'Track response lifecycle']
+  community: {
+    title: 'Community Member',
+    steps: [
+      'Search nearest blood source or trigger SOS',
+      'Enable availability for donation when you are eligible',
+      'Track donation history, cooldown, and certificates'
+    ]
   },
-  donor: {
-    title: 'Donor',
-    steps: ['Set availability status', 'Accept SOS requests nearby', 'Track donation history and cooldown']
+  ngo: {
+    title: 'NGO / Camp Organizer',
+    steps: ['Create and manage donation camps', 'Approve applicants and complete donations', 'Track donor lists and future blood demand']
   },
   hospital: {
     title: 'Hospital / Blood Bank',
@@ -77,7 +81,7 @@ const faqs = [
 
 export default function LandingPage() {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [activeRole, setActiveRole] = useState('user');
+  const [activeRole, setActiveRole] = useState('community');
   const [activeFaq, setActiveFaq] = useState(0);
 
   useEffect(() => {
@@ -123,7 +127,7 @@ export default function LandingPage() {
               Coordinate blood response with speed, trust, and intelligence.
             </h2>
             <p className="max-w-xl text-base text-slate-600 dark:text-slate-300 md:text-lg">
-              LifeLedger unifies donors, hospitals, blood banks, and administrators through real-time updates, SOS workflows, and predictive planning.
+              LifeLedger unifies community members, NGOs, hospitals, blood banks, and administrators through real-time updates, SOS workflows, and predictive planning.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/register" className="rounded-xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-500/30 transition hover:translate-y-[-1px]">
@@ -255,7 +259,7 @@ export default function LandingPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Ready to onboard?</p>
             <h3 className="mt-2 text-3xl font-extrabold md:text-4xl">Join LifeLedger and build a no-delay blood response network.</h3>
             <p className="mt-3 max-w-3xl text-sm text-white/90 md:text-base">
-              Register your role, complete verification, and start coordinating stock, donor response, camps, analytics, and prototype workflows in one platform.
+              Register your role, complete verification, and start coordinating stock, community response, camps, analytics, and prototype workflows in one platform.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/register" className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-brand-700 transition hover:translate-y-[-1px]">

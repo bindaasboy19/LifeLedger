@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const defaultCenter = { lat: 20.5937, lng: 78.9629 };
@@ -14,13 +15,17 @@ const cleanEnv = (value) => {
   return trimmed;
 };
 
-export default function LocationMap({ markers = [], center, zoom = 5, height = '320px' }) {
+const LocationMap = memo(function LocationMap({ markers = [], center, zoom = 5, height = '320px' }) {
   const apiKey = cleanEnv(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
   const invalidKeyFormat = apiKey?.startsWith('G-');
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: invalidKeyFormat ? '' : apiKey || ''
   });
+  const resolvedCenter = useMemo(
+    () => center || (markers[0] ? { lat: markers[0].lat, lng: markers[0].lng } : defaultCenter),
+    [center, markers]
+  );
 
   if (!apiKey || invalidKeyFormat) {
     return (
@@ -38,7 +43,7 @@ export default function LocationMap({ markers = [], center, zoom = 5, height = '
     <div className="overflow-hidden rounded-xl border border-slate-300 dark:border-slate-700">
       <GoogleMap
         mapContainerStyle={{ width: '100%', height }}
-        center={center || markers[0] || defaultCenter}
+        center={resolvedCenter}
         zoom={zoom}
       >
         {markers.map((marker) => (
@@ -51,4 +56,6 @@ export default function LocationMap({ markers = [], center, zoom = 5, height = '
       </GoogleMap>
     </div>
   );
-}
+});
+
+export default LocationMap;

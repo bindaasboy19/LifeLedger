@@ -3,11 +3,17 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { firestore } from '../../lib/firebase.js';
 import { listStockItems } from './stockApi.js';
 
-export const useRealtimeStock = () => {
+export const useRealtimeStock = ({ enabled = true } = {}) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!enabled) {
+      setItems([]);
+      setLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     const loadFromApi = async () => {
@@ -46,7 +52,7 @@ export const useRealtimeStock = () => {
       active = false;
       unsub();
     };
-  }, []);
+  }, [enabled]);
 
   return { items, loading };
 };
