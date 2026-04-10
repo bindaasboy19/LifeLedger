@@ -14,6 +14,14 @@ import {
 import { getAuthErrorMessage } from '../features/auth/authErrorMessage.js';
 import { fetchMyProfile } from '../features/auth/authService.js';
 
+const normalizeProfileRole = (profile) => {
+  if (!profile) return profile;
+  if (profile.role === 'donor') {
+    return { ...profile, role: 'user' };
+  }
+  return profile;
+};
+
 export const useAuthBootstrap = () => {
   const dispatch = useAppDispatch();
 
@@ -43,10 +51,10 @@ export const useAuthBootstrap = () => {
               dispatch(setProfile(null));
             } else {
               dispatch(
-                setProfile({
+                setProfile(normalizeProfileRole({
                   uid: user.uid,
                   ...snapshot.data()
-                })
+                }))
               );
             }
 
@@ -55,7 +63,7 @@ export const useAuthBootstrap = () => {
           () => {
             fetchMyProfile()
               .then((profile) => {
-                dispatch(setProfile(profile));
+                dispatch(setProfile(normalizeProfileRole(profile)));
               })
               .catch((fetchError) => {
                 if (fetchError?.response?.status === 404) {

@@ -17,7 +17,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', listStock);
-router.get('/flow', listStockFlow);
+router.get('/flow', authorize(['hospital', 'blood_bank', 'admin']), listStockFlow);
 router.get('/search', searchStock);
 router.post(
   '/',

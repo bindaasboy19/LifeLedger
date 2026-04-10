@@ -2,7 +2,7 @@ import { db } from '../config/firebase.js';
 import { asyncHandler, AppError } from '../utils/http.js';
 import { DonationHistory } from '../models/DonationHistory.js';
 import { DonationCertificate } from '../models/DonationCertificate.js';
-import { CAMP_ORGANIZER_ROLES, COMMUNITY_ROLES, ROLES } from '../utils/constants.js';
+import { CAMP_ORGANIZER_ROLES, isCommunityRole, ROLES } from '../utils/constants.js';
 
 const DONATION_COOLDOWN_DAYS = 90;
 
@@ -37,7 +37,7 @@ export const getDonorHistory = asyncHandler(async (req, res) => {
   const donorUid = req.params.uid || req.user.uid;
 
   if (req.user.uid !== donorUid && !canManageDonorRecords(req.user.role)) {
-    throw new AppError('Forbidden donor history access', 403);
+    throw new AppError('Forbidden donation history access', 403);
   }
 
   const records = await DonationHistory.find({ donorUid }).sort({ donatedAt: -1 }).lean();
@@ -54,7 +54,7 @@ export const addDonationRecord = asyncHandler(async (req, res) => {
   if (lastRecord) {
     const elapsed = daysBetween(new Date(lastRecord.donatedAt), donatedAt);
     if (elapsed < DONATION_COOLDOWN_DAYS) {
-      throw new AppError(`Donor is in cooldown. ${DONATION_COOLDOWN_DAYS - elapsed} days remaining.`, 400);
+      throw new AppError(`Donation cooldown active. ${DONATION_COOLDOWN_DAYS - elapsed} days remaining.`, 400);
     }
   }
 
@@ -82,7 +82,7 @@ export const listDonorRegistry = asyncHandler(async (req, res) => {
 
   let rows = snapshot.docs
     .map((doc) => ({ uid: doc.id, ...doc.data() }))
-    .filter((user) => COMMUNITY_ROLES.includes(user.role));
+    .filter((user) => isCommunityRole(user.role));
 
   if (bloodGroup) {
     rows = rows.filter((row) => row.bloodGroup === String(bloodGroup).toUpperCase());

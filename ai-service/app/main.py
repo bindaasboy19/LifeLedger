@@ -1,6 +1,7 @@
 import os
+import re
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -25,14 +26,41 @@ class PredictRequest(BaseModel):
 
 app = FastAPI(title='LifeLedger AI Service', version='1.1.0')
 
-allowed_origins = os.getenv(
-    'ALLOWED_ORIGINS',
-    'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:5000,http://127.0.0.1:5000'
+
+def normalize_origin(origin: str) -> Optional[str]:
+    candidate = str(origin or '').strip().strip(',').strip()
+    if not candidate:
+        return None
+    if not candidate.startswith(('http://', 'https://')):
+        if 'localhost' in candidate or '127.0.0.1' in candidate:
+            candidate = f'http://{candidate}'
+        else:
+            candidate = f'https://{candidate}'
+    return candidate.rstrip('/')
+
+
+def parse_allowed_origins(raw_value: str) -> List[str]:
+    tokens = re.split(r'[\n,]+', raw_value or '')
+    normalized = []
+
+    for token in tokens:
+        origin = normalize_origin(token)
+        if origin and origin not in normalized:
+            normalized.append(origin)
+
+    return normalized
+
+
+allowed_origins = parse_allowed_origins(
+    os.getenv(
+        'ALLOWED_ORIGINS',
+        'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:5000,http://127.0.0.1:5000'
+    )
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in allowed_origins.split(',') if origin.strip()],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*']

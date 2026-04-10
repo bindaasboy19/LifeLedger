@@ -26,7 +26,7 @@ router.use(authenticate);
 router.get('/', listCamps);
 router.get('/applications/me', listMyCampApplications);
 router.post('/', authorize(['hospital', 'admin', 'blood_bank', 'ngo'], { requireVerified: true }), validate(campSchema), createCamp);
-router.post('/:id/applications', authorize(['user', 'donor']), validate(campApplicationCreateSchema), applyForCamp);
+router.post('/:id/applications', authorize(['user']), validate(campApplicationCreateSchema), applyForCamp);
 router.get('/:id/applications', authorize(['hospital', 'admin', 'blood_bank', 'ngo']), listCampApplications);
 router.patch('/:id/applications/:applicationId', requireMongo, authorize(['hospital', 'admin', 'blood_bank', 'ngo']), validate(campApplicationUpdateSchema), updateCampApplication);
 router.patch('/:id', authorize(['hospital', 'admin', 'blood_bank', 'ngo']), validate(campUpdateSchema), updateCamp);

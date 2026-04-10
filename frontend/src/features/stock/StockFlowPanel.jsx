@@ -1,6 +1,7 @@
 import SectionCard from '../../components/common/SectionCard.jsx';
 import Badge from '../../components/common/Badge.jsx';
 import { useRealtimeStockFlow } from './useRealtimeStockFlow.js';
+import { useAppSelector } from '../../hooks/useStore.js';
 
 const actionTone = {
   created: 'success',
@@ -10,12 +11,13 @@ const actionTone = {
 };
 
 export default function StockFlowPanel() {
-  const { items, loading } = useRealtimeStockFlow();
+  const profile = useAppSelector((state) => state.auth.profile);
+  const { items, loading } = useRealtimeStockFlow(profile);
 
   return (
     <SectionCard
       title="Blood Stock Flow"
-      subtitle="Transparent real-time stock movement log visible to all roles"
+      subtitle="Organisation-specific stock movement log"
     >
       <div className="space-y-2">
         {loading ? <p className="text-sm">Loading stock flow...</p> : null}

@@ -21,17 +21,29 @@ export default function PredictionPanel() {
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
   const [region, setRegion] = useState('all');
+  const [health, setHealth] = useState({ status: 'checking', aiService: 'checking', mongo: 'checking' });
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
-      const response = await api.post('/ai/predict', region === 'all' ? {} : { region });
+      const [healthResponse, response] = await Promise.all([
+        api.get('/ai/health').catch(() => null),
+        api.post('/ai/predict', region === 'all' ? {} : { region })
+      ]);
+
+      if (healthResponse?.data?.data) {
+        setHealth(healthResponse.data.data);
+      } else {
+        setHealth({ status: 'degraded', aiService: 'down', mongo: 'unknown' });
+      }
+
       setData(response.data.data);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Prediction request failed');
+      setError('Prediction service is temporarily unavailable.');
       setData(null);
+      setHealth({ status: 'degraded', aiService: 'down', mongo: 'unknown' });
     } finally {
       setLoading(false);
     }
@@ -101,6 +113,12 @@ export default function PredictionPanel() {
         <>
           <div className="mb-3 flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-800">
+              AI Service: {health.aiService || 'unknown'}
+            </span>
+            <span className="rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-800">
+              Mongo: {health.mongo || 'unknown'}
+            </span>
+            <span className="rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-800">
               Source: {data.source || 'unknown'}
             </span>
             <span className="rounded-full bg-slate-200 px-3 py-1 dark:bg-slate-800">
@@ -137,7 +155,7 @@ export default function PredictionPanel() {
           </div>
         </>
       ) : (
-        !loading && <p className="text-sm text-slate-500">Prediction data unavailable.</p>
+        !loading && <p className="text-sm text-slate-500">Prediction data is not available right now.</p>
       )}
     </SectionCard>
   );

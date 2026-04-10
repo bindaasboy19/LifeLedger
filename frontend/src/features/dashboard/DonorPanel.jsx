@@ -42,7 +42,7 @@ export default function DonorPanel() {
         : undefined,
       location: {
         city: form.city,
-        address: `${form.city} Donor Area`,
+        address: `${form.city} Community Area`,
         lat: coords.lat,
         lng: coords.lng
       }

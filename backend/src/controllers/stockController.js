@@ -1,6 +1,7 @@
 import { db } from '../config/firebase.js';
 import { asyncHandler, AppError } from '../utils/http.js';
 import { calculateDistanceKm } from '../services/locationService.js';
+import { ROLES } from '../utils/constants.js';
 
 const collection = db.collection('blood_stock');
 const stockFlowCollection = db.collection('stock_flow');
@@ -114,6 +115,7 @@ const logStockFlow = async ({ stockId, action, beforeRecord, afterRecord, actor 
     unitsAfter: afterUnits,
     deltaUnits: afterUnits - beforeUnits,
     sourceType: afterRecord?.sourceType || beforeRecord?.sourceType || null,
+    sourceUid: afterRecord?.createdBy || beforeRecord?.createdBy || actor.uid,
     location: afterRecord?.location || beforeRecord?.location || null,
     actorUid: actor.uid,
     actorRole: actor.role,
@@ -125,17 +127,35 @@ const logStockFlow = async ({ stockId, action, beforeRecord, afterRecord, actor 
 
 export const listStock = asyncHandler(async (req, res) => {
   const snapshot = await collection.get();
-  const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  let rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  if ([ROLES.HOSPITAL, ROLES.BLOOD_BANK].includes(req.user.role)) {
+    rows = rows.filter((row) => row.createdBy === req.user.uid);
+  }
 
   res.json({ success: true, data: rows });
 });
 
-export const listStockFlow = asyncHandler(async (_req, res) => {
-  const snapshot = await stockFlowCollection.orderBy('at', 'desc').limit(300).get();
-  const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+export const listStockFlow = asyncHandler(async (req, res) => {
+  const snapshot = await stockFlowCollection.orderBy('at', 'desc').limit(500).get();
+  let rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  if (req.user.role !== ROLES.ADMIN) {
+    rows = rows.filter((row) => row.sourceUid === req.user.uid || row.actorUid === req.user.uid);
+  }
 
   res.json({ success: true, data: rows });
 });
+
+const ensureStockOwner = (record, actor) => {
+  if (actor.role === ROLES.ADMIN) {
+    return;
+  }
+
+  if (record.createdBy !== actor.uid) {
+    throw new AppError('Stock record access is restricted.', 403);
+  }
+};
 
 export const createStock = asyncHandler(async (req, res) => {
   const payload = req.body;
@@ -172,6 +192,7 @@ export const updateStock = asyncHandler(async (req, res) => {
   }
 
   const existing = { id: doc.id, ...doc.data() };
+  ensureStockOwner(existing, req.user);
 
   await docRef.set(
     {
@@ -206,6 +227,7 @@ export const deleteStock = asyncHandler(async (req, res) => {
   }
 
   const existing = { id: doc.id, ...doc.data() };
+  ensureStockOwner(existing, req.user);
   await docRef.delete();
 
   await logStockFlow({

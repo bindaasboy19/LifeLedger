@@ -54,18 +54,7 @@ export const useRealtimeSOS = (profile, { enabled = true } = {}) => {
     };
   }, [enabled]);
 
-  const filtered = useMemo(() => {
-    if (!profile) return items;
-
-    if (['donor', 'user', 'hospital'].includes(profile.role)) {
-      return items.filter((item) => {
-        const candidates = item.candidateResponderUids || item.candidateDonorUids || [];
-        return item.requesterUid === profile.uid || candidates.includes(profile.uid);
-      });
-    }
-
-    return items;
-  }, [items, profile]);
+  const filtered = useMemo(() => items, [items]);
 
   return { items: filtered, loading };
 };

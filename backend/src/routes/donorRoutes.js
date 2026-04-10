@@ -15,14 +15,14 @@ import { donorDonationSchema, donorProfileSchema } from '../utils/schemas.js';
 const router = Router();
 
 router.use(authenticate);
-router.patch('/profile', authorize(['user', 'donor', 'admin']), validate(donorProfileSchema), updateDonorProfile);
+router.patch('/profile', authorize(['user', 'admin']), validate(donorProfileSchema), updateDonorProfile);
 router.get('/registry', authorize(['ngo', 'hospital', 'blood_bank', 'admin']), listDonorRegistry);
-router.get('/certificates/:uid?', requireMongo, authorize(['user', 'donor', 'ngo', 'hospital', 'blood_bank', 'admin']), getDonationCertificates);
-router.get('/history/:uid?', requireMongo, authorize(['user', 'donor', 'ngo', 'hospital', 'blood_bank', 'admin']), getDonorHistory);
+router.get('/certificates/:uid?', requireMongo, authorize(['user', 'ngo', 'hospital', 'blood_bank', 'admin']), getDonationCertificates);
+router.get('/history/:uid?', requireMongo, authorize(['user', 'ngo', 'hospital', 'blood_bank', 'admin']), getDonorHistory);
 router.post(
   '/history/:uid?',
   requireMongo,
-  authorize(['user', 'donor', 'ngo', 'hospital', 'blood_bank', 'admin']),
+  authorize(['user', 'ngo', 'hospital', 'blood_bank', 'admin']),
   validate(donorDonationSchema),
   addDonationRecord
 );

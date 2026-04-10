@@ -4,10 +4,9 @@ import { canDonateTo } from '../services/bloodCompatibility.js';
 import { calculateDistanceKm } from '../services/locationService.js';
 import { broadcastNotifications, createNotification, sendEmailBatch } from '../services/notificationService.js';
 import { SosHistory } from '../models/SosHistory.js';
-import { ROLES } from '../utils/constants.js';
+import { isCommunityRole, normalizeCommunityRole, ROLES } from '../utils/constants.js';
 
 const SOS_RADIUS_KM = 50;
-const SOS_TARGET_ROLES = [ROLES.DONOR, ROLES.USER, ROLES.HOSPITAL];
 
 const getDaysSince = (isoDate) => {
   if (!isoDate) return null;
@@ -20,40 +19,30 @@ const getResponderCandidates = (sos) => sos.candidateResponderUids || sos.candid
 
 const getRejectedCandidates = (sos) => sos.rejectedResponderUids || sos.rejectedDonorUids || [];
 
-const isBloodGroupMatch = ({ role, responderBloodGroup, requiredBloodGroup }) => {
+const isBloodGroupMatch = ({ responderBloodGroup, requiredBloodGroup }) => {
   if (!responderBloodGroup) return false;
-  if (role === ROLES.DONOR) {
-    return canDonateTo(responderBloodGroup, requiredBloodGroup);
-  }
-  return responderBloodGroup === requiredBloodGroup;
+  return canDonateTo(responderBloodGroup, requiredBloodGroup);
 };
 
 const findEligibleResponders = async ({ bloodGroup, location, requesterUid }) => {
-  const snapshots = await Promise.all(
-    SOS_TARGET_ROLES.map((role) => db.collection('users').where('role', '==', role).get())
-  );
-
-  const allCandidates = snapshots.flatMap((snapshot) =>
-    snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
-  );
+  const snapshot = await db.collection('users').get();
+  const allCandidates = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
 
   return allCandidates
     .filter((candidate) => {
       if (candidate.uid === requesterUid) return false;
       if (candidate.isBlocked) return false;
+      if (!isCommunityRole(candidate.role)) return false;
       if (candidate.availabilityStatus === false) return false;
       if (!isBloodGroupMatch({
-        role: candidate.role,
         responderBloodGroup: candidate.bloodGroup,
         requiredBloodGroup: bloodGroup
       })) {
         return false;
       }
 
-      if (candidate.role === ROLES.DONOR) {
-        const daysSinceDonation = getDaysSince(candidate.lastDonationDate);
-        if (daysSinceDonation !== null && daysSinceDonation < 90) return false;
-      }
+      const daysSinceDonation = getDaysSince(candidate.lastDonationDate);
+      if (daysSinceDonation !== null && daysSinceDonation < 90) return false;
 
       const distance = calculateDistanceKm(
         location.lat,
@@ -67,6 +56,7 @@ const findEligibleResponders = async ({ bloodGroup, location, requesterUid }) =>
     })
     .map((candidate) => ({
       ...candidate,
+      role: normalizeCommunityRole(candidate.role),
       distanceKm: calculateDistanceKm(
         location.lat,
         location.lng,
@@ -117,9 +107,7 @@ export const createSOS = asyncHandler(async (req, res) => {
   });
 
   const candidateResponderUids = eligibleResponders.map((candidate) => candidate.uid);
-  const candidateDonorUids = eligibleResponders
-    .filter((candidate) => candidate.role === ROLES.DONOR)
-    .map((candidate) => candidate.uid);
+  const candidateDonorUids = [...candidateResponderUids];
 
   const initialTimeline = [
     {
@@ -187,14 +175,7 @@ export const createSOS = asyncHandler(async (req, res) => {
 
 export const listSOS = asyncHandler(async (req, res) => {
   const snapshot = await db.collection('sos_requests').orderBy('createdAt', 'desc').get();
-  let rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-  if ([ROLES.USER, ROLES.DONOR, ROLES.HOSPITAL].includes(req.user.role)) {
-    rows = rows.filter((item) => {
-      const candidates = getResponderCandidates(item);
-      return item.requesterUid === req.user.uid || candidates.includes(req.user.uid);
-    });
-  }
+  const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
   res.json({ success: true, data: rows });
 });
@@ -220,7 +201,7 @@ export const updateSOSStatus = asyncHandler(async (req, res) => {
 
   if (status === 'accepted') {
     acceptedResponderUid = req.user.uid;
-    if (req.user.role === ROLES.DONOR) {
+    if (req.user.role === ROLES.USER) {
       acceptedDonorUid = req.user.uid;
     }
   }
@@ -229,7 +210,7 @@ export const updateSOSStatus = asyncHandler(async (req, res) => {
     if (!rejectedResponderUids.includes(req.user.uid)) {
       rejectedResponderUids.push(req.user.uid);
     }
-    if (req.user.role === ROLES.DONOR && !rejectedDonorUids.includes(req.user.uid)) {
+    if (req.user.role === ROLES.USER && !rejectedDonorUids.includes(req.user.uid)) {
       rejectedDonorUids.push(req.user.uid);
     }
   }

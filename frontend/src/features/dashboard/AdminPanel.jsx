@@ -26,7 +26,7 @@ export default function AdminPanel() {
       setAnalytics(analyticsRes.data.data);
       setSosLogs(logsRes.data.data);
     } catch (error) {
-      setLoadingError(error.response?.data?.message || error.message || 'Failed to load admin data');
+      setLoadingError('Unable to load admin data right now.');
     }
   };
 
@@ -55,7 +55,7 @@ export default function AdminPanel() {
       setPrototypeResult(data.data);
       await load();
     } catch (error) {
-      setActionError(error.response?.data?.message || error.message || 'Prototype generation failed');
+      setActionError('Unable to generate prototype activity right now.');
     } finally {
       setSeeding(false);
     }

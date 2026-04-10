@@ -1,30 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import SectionCard from '../../components/common/SectionCard.jsx';
-import { bloodGroups, cityCoordinates } from '../../lib/options.js';
+import {
+  bloodGroups,
+  countries,
+  getDistrictsForState,
+  getLocationMeta,
+  getStatesForCountry
+} from '../../lib/options.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/useStore.js';
 import { setProfile } from '../auth/authSlice.js';
 import { changeUserPassword, updateProfile } from '../auth/authService.js';
 
-const availabilityRoles = ['donor', 'user', 'hospital'];
-
 export default function ProfilePanel() {
   const profile = useAppSelector((state) => state.auth.profile);
   const dispatch = useAppDispatch();
-
-  const cityOptions = useMemo(() => {
-    const cities = Object.keys(cityCoordinates);
-    if (profile?.location?.city && !cities.includes(profile.location.city)) {
-      return [...cities, profile.location.city];
-    }
-    return cities;
-  }, [profile?.location?.city]);
+  const isIndividual = profile?.role === 'user';
 
   const [form, setForm] = useState({
     displayName: '',
     phone: '',
-    bloodGroup: 'O+',
-    city: 'Delhi',
-    address: '',
+    bloodGroup: '',
+    country: '',
+    state: '',
+    district: '',
+    addressLine: '',
     availabilityStatus: true
   });
   const [saveState, setSaveState] = useState({ loading: false, error: '', success: '' });
@@ -35,14 +34,22 @@ export default function ProfilePanel() {
   });
   const [passwordState, setPasswordState] = useState({ loading: false, error: '', success: '' });
 
+  const stateOptions = useMemo(() => getStatesForCountry(form.country), [form.country]);
+  const districtOptions = useMemo(
+    () => getDistrictsForState(form.country, form.state),
+    [form.country, form.state]
+  );
+
   useEffect(() => {
     if (!profile) return;
     setForm({
       displayName: profile.displayName || '',
       phone: profile.phone || '',
-      bloodGroup: profile.bloodGroup || 'O+',
-      city: profile.location?.city || 'Delhi',
-      address: profile.location?.address || '',
+      bloodGroup: profile.bloodGroup || '',
+      country: profile.location?.country || 'India',
+      state: profile.location?.state || '',
+      district: profile.location?.district || profile.location?.city || '',
+      addressLine: profile.location?.address || '',
       availabilityStatus: profile.availabilityStatus !== false
     });
   }, [profile]);
@@ -54,7 +61,7 @@ export default function ProfilePanel() {
     setSaveState({ loading: true, error: '', success: '' });
 
     try {
-      const cityMeta = cityCoordinates[form.city] || {
+      const locationMeta = getLocationMeta(form.country, form.state, form.district) || {
         lat: profile.location?.lat,
         lng: profile.location?.lng
       };
@@ -62,15 +69,20 @@ export default function ProfilePanel() {
       const next = await updateProfile({
         displayName: form.displayName,
         phone: form.phone,
-        bloodGroup: form.bloodGroup,
-        ...(availabilityRoles.includes(profile.role)
-          ? { availabilityStatus: Boolean(form.availabilityStatus) }
+        ...(isIndividual
+          ? {
+              bloodGroup: form.bloodGroup,
+              availabilityStatus: Boolean(form.availabilityStatus)
+            }
           : {}),
         location: {
-          city: form.city,
-          address: form.address,
-          lat: cityMeta.lat,
-          lng: cityMeta.lng
+          country: form.country,
+          state: form.state,
+          district: form.district,
+          city: form.district,
+          address: form.addressLine,
+          lat: locationMeta.lat,
+          lng: locationMeta.lng
         }
       });
 
@@ -79,7 +91,7 @@ export default function ProfilePanel() {
     } catch (error) {
       setSaveState({
         loading: false,
-        error: error?.response?.data?.message || error?.message || 'Failed to update profile.',
+        error: 'Unable to update your profile right now.',
         success: ''
       });
     }
@@ -110,21 +122,21 @@ export default function ProfilePanel() {
     } catch (error) {
       setPasswordState({
         loading: false,
-        error: error?.message || 'Unable to update password. Re-login and try again.',
+        error: 'Unable to update password right now. Please try again shortly.',
         success: ''
       });
     }
   };
 
   return (
-    <SectionCard title="Profile" subtitle="Edit your personal details and account security settings">
+    <SectionCard title="Profile" subtitle="Edit your personal or organisation details and account security settings">
       <form onSubmit={onSaveProfile} className="grid gap-2 md:grid-cols-3">
         <input
           type="text"
           value={form.displayName}
           onChange={(event) => setForm((prev) => ({ ...prev, displayName: event.target.value }))}
           className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
-          placeholder="Full name"
+          placeholder="Full name or organization name"
           required
         />
         <input
@@ -135,33 +147,88 @@ export default function ProfilePanel() {
           placeholder="Phone"
           required
         />
+        {isIndividual ? (
+          <select
+            value={form.bloodGroup}
+            onChange={(event) => setForm((prev) => ({ ...prev, bloodGroup: event.target.value }))}
+            className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+            required
+          >
+            <option value="">Please select blood group</option>
+            {bloodGroups.map((bg) => (
+              <option key={bg} value={bg}>
+                {bg}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            Blood group is only used for individual users.
+          </div>
+        )}
         <select
-          value={form.bloodGroup}
-          onChange={(event) => setForm((prev) => ({ ...prev, bloodGroup: event.target.value }))}
+          value={form.country}
+          onChange={(event) =>
+            setForm((prev) => ({
+              ...prev,
+              country: event.target.value,
+              state: '',
+              district: ''
+            }))
+          }
           className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+          required
         >
-          {bloodGroups.map((bg) => (
-            <option key={bg}>{bg}</option>
+          <option value="">Please select country</option>
+          {countries.map((country) => (
+            <option key={country} value={country}>
+              {country}
+            </option>
           ))}
         </select>
         <select
-          value={form.city}
-          onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
+          value={form.state}
+          onChange={(event) =>
+            setForm((prev) => ({
+              ...prev,
+              state: event.target.value,
+              district: ''
+            }))
+          }
           className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+          disabled={!form.country}
+          required
         >
-          {cityOptions.map((city) => (
-            <option key={city}>{city}</option>
+          <option value="">Please select state</option>
+          {stateOptions.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
+        <select
+          value={form.district}
+          onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))}
+          className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+          disabled={!form.state}
+          required
+        >
+          <option value="">Please select district</option>
+          {districtOptions.map((district) => (
+            <option key={district} value={district}>
+              {district}
+            </option>
           ))}
         </select>
         <input
           type="text"
-          value={form.address}
-          onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))}
+          value={form.addressLine}
+          onChange={(event) => setForm((prev) => ({ ...prev, addressLine: event.target.value }))}
           className="rounded-lg border border-slate-300 px-3 py-2 md:col-span-2 dark:border-slate-700 dark:bg-slate-900"
-          placeholder="Address"
+          placeholder="Address line"
           required
         />
-        {availabilityRoles.includes(profile?.role) ? (
+        {isIndividual ? (
           <label className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700">
             <input
               type="checkbox"
@@ -170,7 +237,7 @@ export default function ProfilePanel() {
                 setForm((prev) => ({ ...prev, availabilityStatus: event.target.checked }))
               }
             />
-            <span className="text-sm">Available for SOS matching</span>
+            <span className="text-sm">Available for SOS matching and donation response</span>
           </label>
         ) : null}
         <button

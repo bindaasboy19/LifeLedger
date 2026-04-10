@@ -9,20 +9,46 @@ const phoneSchema = z
   .regex(/^[0-9+\-()\s]+$/, 'Phone number contains invalid characters');
 
 export const locationSchema = z.object({
-  city: z.string().min(2),
+  city: z.string().min(2).optional(),
+  district: z.string().min(2).optional(),
+  state: z.string().min(2).optional(),
+  country: z.string().min(2).optional(),
   address: z.string().min(2).optional(),
   lat: z.number(),
   lng: z.number()
+});
+
+const profileLocationSchema = locationSchema.superRefine((location, ctx) => {
+  if (!location.country) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['country'], message: 'Country is required' });
+  }
+  if (!location.state) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['state'], message: 'State is required' });
+  }
+  if (!location.district) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['district'], message: 'District is required' });
+  }
+  if (!location.address) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['address'], message: 'Address line is required' });
+  }
 });
 
 export const upsertProfileSchema = z.object({
   displayName: z.string().min(2),
   phone: phoneSchema,
   role: z.enum(roleValues),
-  bloodGroup: z.enum(BLOOD_GROUPS),
+  bloodGroup: z.enum(BLOOD_GROUPS).optional(),
   availabilityStatus: z.boolean().optional(),
   lastDonationDate: z.string().datetime().optional(),
-  location: locationSchema
+  location: profileLocationSchema
+}).superRefine((data, ctx) => {
+  if (data.role === ROLES.USER && !data.bloodGroup) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['bloodGroup'],
+      message: 'Blood group is required for individual accounts'
+    });
+  }
 });
 
 export const profileUpdateSchema = z
@@ -32,7 +58,7 @@ export const profileUpdateSchema = z
     bloodGroup: z.enum(BLOOD_GROUPS).optional(),
     availabilityStatus: z.boolean().optional(),
     lastDonationDate: z.string().datetime().optional(),
-    location: locationSchema.optional()
+    location: profileLocationSchema.optional()
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one profile field must be provided'
@@ -84,6 +110,7 @@ export const campSchema = z.object({
   startAt: z.string().datetime(),
   endAt: z.string().datetime(),
   location: locationSchema,
+  notificationRadiusKm: z.number().min(1).max(500).optional(),
   requiredBloodGroups: z.array(z.enum(BLOOD_GROUPS)).min(1),
   contactDetails: z.object({
     email: z.string().email(),

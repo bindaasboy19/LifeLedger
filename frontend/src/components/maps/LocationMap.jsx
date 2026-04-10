@@ -18,7 +18,7 @@ const cleanEnv = (value) => {
 const LocationMap = memo(function LocationMap({ markers = [], center, zoom = 5, height = '320px' }) {
   const apiKey = cleanEnv(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
   const invalidKeyFormat = apiKey?.startsWith('G-');
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: invalidKeyFormat ? '' : apiKey || ''
   });
@@ -27,10 +27,27 @@ const LocationMap = memo(function LocationMap({ markers = [], center, zoom = 5, 
     [center, markers]
   );
 
-  if (!apiKey || invalidKeyFormat) {
+  if (!apiKey || invalidKeyFormat || loadError) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm dark:border-slate-700">
-        Set a valid Google Maps API key in `VITE_GOOGLE_MAPS_API_KEY` to enable map view.
+        <p className="font-medium">Map preview is unavailable right now.</p>
+        {markers.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {markers.slice(0, 6).map((marker) => (
+              <div key={marker.id || `${marker.lat}-${marker.lng}`} className="rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900/60">
+                <p>{marker.title}</p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${marker.lat},${marker.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-xs font-semibold text-brand-600"
+                >
+                  Open location
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     );
   }

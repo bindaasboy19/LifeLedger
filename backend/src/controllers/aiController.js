@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/http.js';
 import { AITrainingData } from '../models/AITrainingData.js';
-import { requestPrediction } from '../services/aiService.js';
+import mongoose from 'mongoose';
+import { checkPredictionServiceHealth, requestPrediction } from '../services/aiService.js';
 
 const fallbackFromRecords = (records = []) => {
   const grouped = new Map();
@@ -116,18 +117,46 @@ const demoFallback = () => {
   };
 };
 
+const readTrainingData = async (region) => {
+  if (mongoose.connection.readyState !== 1) {
+    return [];
+  }
+
+  try {
+    const query = region ? { region } : {};
+    return await AITrainingData.find(query).sort({ date: 1 }).lean();
+  } catch {
+    return [];
+  }
+};
+
+export const getPredictionHealth = asyncHandler(async (_req, res) => {
+  const aiHealth = await checkPredictionServiceHealth();
+
+  res.json({
+    success: true,
+    data: {
+      status: aiHealth.available ? 'up' : 'degraded',
+      aiService: aiHealth.available ? 'up' : 'down',
+      mongo: mongoose.connection.readyState === 1 ? 'up' : 'down',
+      source: aiHealth.source
+    }
+  });
+});
+
 export const getPrediction = asyncHandler(async (req, res) => {
   const { region } = req.body;
-
-  const query = region ? { region } : {};
-  const records = await AITrainingData.find(query).sort({ date: 1 }).lean();
+  const records = await readTrainingData(region);
 
   if (records.length === 0) {
     res.json({
       success: true,
       data: {
         ...demoFallback(),
-        warning: 'AI training dataset is empty. Showing demo forecast.'
+        warning:
+          mongoose.connection.readyState === 1
+            ? 'Historical AI training data is not available yet. Showing demo forecast.'
+            : 'Prediction history store is temporarily unavailable. Showing demo forecast.'
       }
     });
     return;
@@ -159,7 +188,7 @@ export const getPrediction = asyncHandler(async (req, res) => {
       success: true,
       data: {
         ...fallback,
-        warning: `AI service unavailable (${error.message}). Using backend fallback forecast.`
+        warning: 'Prediction service is temporarily unavailable. Showing resilient forecast mode.'
       }
     });
   }

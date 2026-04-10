@@ -2,7 +2,8 @@ import cron from 'node-cron';
 import { db } from '../config/firebase.js';
 import { env } from '../config/env.js';
 import { broadcastNotifications, sendEmailBatch } from '../services/notificationService.js';
-import { COMMUNITY_ROLES } from '../utils/constants.js';
+import { calculateDistanceKm } from '../services/locationService.js';
+import { isCommunityRole } from '../utils/constants.js';
 
 const shouldSendDayBefore = (startAt) => {
   const now = new Date();
@@ -18,12 +19,22 @@ const shouldSendDayOf = (startAt) => {
 };
 
 const notifyCamp = async (camp, label) => {
-  const snapshots = await Promise.all(
-    COMMUNITY_ROLES.map((role) => db.collection('users').where('role', '==', role).get())
-  );
-  const recipients = snapshots
-    .flatMap((snapshot) => snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() })))
-    .filter((donor) => camp.requiredBloodGroups?.includes(donor.bloodGroup));
+  const radiusKm = Number(camp.notificationRadiusKm || 25);
+  const snapshot = await db.collection('users').get();
+  const recipients = snapshot.docs
+    .map((doc) => ({ uid: doc.id, ...doc.data() }))
+    .filter((user) => isCommunityRole(user.role))
+    .filter((user) => user.availabilityStatus !== false)
+    .filter((user) => camp.requiredBloodGroups?.includes(user.bloodGroup))
+    .filter((user) => {
+      const distance = calculateDistanceKm(
+        camp.location?.lat,
+        camp.location?.lng,
+        user.location?.lat,
+        user.location?.lng
+      );
+      return distance !== null && distance <= radiusKm;
+    });
 
   if (recipients.length === 0) return;
 

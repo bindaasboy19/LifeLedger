@@ -59,8 +59,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.code === 'ERR_NETWORK') {
-      error.message =
-        'Network error: backend API is unreachable. Check backend server, port, and VITE_API_BASE_URL.';
+      error.message = 'Service is temporarily unavailable. Please try again shortly.';
     }
     return Promise.reject(error);
   }

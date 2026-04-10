@@ -134,10 +134,18 @@ export default function SOSPanel() {
       );
     }
 
+    if (profile?.role === 'user') {
+      return (
+        <span className="text-xs text-slate-500 dark:text-slate-300">
+          View only. Response is limited to compatible nearby users matched for this SOS.
+        </span>
+      );
+    }
+
     return <span className="text-xs text-slate-500 dark:text-slate-300">No actions available</span>;
   };
 
-  const canCreateSOS = ['user', 'donor', 'hospital', 'blood_bank', 'admin'].includes(profile?.role);
+  const canCreateSOS = ['user', 'hospital', 'blood_bank', 'admin'].includes(profile?.role);
 
   return (
     <SectionCard title="SOS Emergency" subtitle="One-click emergency creation and live lifecycle tracking">
@@ -205,6 +213,13 @@ export default function SOSPanel() {
               {new Date(item.createdAt).toLocaleString()} | Candidates:{' '}
               {item.candidateResponderUids?.length || item.candidateDonorUids?.length || 0}
             </p>
+            {profile?.role === 'user' ? (
+              <p className="text-xs text-slate-500 dark:text-slate-300">
+                {((item.candidateResponderUids || item.candidateDonorUids || []).includes(profile.uid))
+                  ? 'You are eligible to respond to this SOS.'
+                  : 'You can monitor this SOS, but only matched compatible users can respond.'}
+              </p>
+            ) : null}
             {item.acceptedResponderUid ? (
               <p className="text-xs text-slate-500 dark:text-slate-300">
                 Accepted by: {item.acceptedResponderUid}

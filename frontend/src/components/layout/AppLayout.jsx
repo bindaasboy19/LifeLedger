@@ -7,7 +7,7 @@ import NotificationBell from './NotificationBell.jsx';
 
 const roleLabels = {
   user: 'Community Member',
-  donor: 'Community Donor',
+  donor: 'Community Member',
   ngo: 'NGO Organizer',
   hospital: 'Hospital',
   blood_bank: 'Blood Bank',

@@ -52,12 +52,12 @@ Project LifeLedger/
 
 - Firebase Authentication with role-aware profile provisioning.
 - JWT verification on backend via Firebase Admin `verifyIdToken`.
-- Role-based API access control (`user`, `donor`, `hospital`, `blood_bank`, `admin`).
+- Role-based API access control (`user`, `ngo`, `hospital`, `blood_bank`, `admin`).
 - Realtime blood stock management using Firestore listeners.
 - Expiry warning indicators.
 - Blood search by group + location + radius + sort by distance/availability.
-- SOS emergency workflow with donor matching and lifecycle transitions.
-- Donor availability + 90-day cooldown enforcement.
+- SOS emergency workflow with compatible user matching and lifecycle transitions.
+- Individual donation availability + 90-day cooldown enforcement.
 - Donation camp creation/discovery with map markers and reminder scheduler.
 - Realtime in-app notifications + email notification pipeline.
 - AI 7-day demand prediction and shortage-risk scoring via FastAPI microservice.
@@ -167,7 +167,7 @@ Seed includes:
 - 3 hospitals
 - 2 blood banks
 - 1 NGO organizer
-- 10 donors (mixed blood groups)
+- 10 individual user accounts (mixed blood groups)
 - 5 SOS history records
 - 3 upcoming camps
 - sample camp applications and one generated donation certificate
@@ -187,7 +187,6 @@ Sample seeded login emails:
 - `ngo1@lifeledger.demo`
 - `hospital1@lifeledger.demo`
 - `bloodbank1@lifeledger.demo`
-- `donor1@lifeledger.demo`
 
 Admin accounts are intentionally not listed for public sign-up or public demo access. Create or manage admin profiles directly from backend seed/data operations only.
 
@@ -308,7 +307,7 @@ After AI deploy, set backend `AI_SERVICE_URL` to Render AI service URL and redep
 
 - Use seeded accounts with `Demo@12345`.
 - Open two browser windows with different roles to show realtime Firestore updates.
-- Trigger SOS from a user account and accept from donor account to demonstrate lifecycle transitions.
+- Trigger SOS from a user account and accept from a compatible user account to demonstrate lifecycle transitions.
 - Show admin dashboard analytics and AI shortage risk chart.
 - Show camp creation and map markers in camp finder.
 - Use `Generate Prototype Activity` button in Admin dashboard (or `npm run seed:prototype`) to create live demo data instantly.

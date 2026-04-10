@@ -26,7 +26,6 @@ const tabsByRole = {
     { id: 'donor', label: 'Donation', module: 'donor' },
     { id: 'stock', label: 'Stock', module: 'stock' },
     { id: 'search', label: 'Find Blood', module: 'search' },
-    { id: 'flow', label: 'Stock Flow', module: 'flow' },
     { id: 'sos', label: 'SOS', module: 'sos' },
     { id: 'camps', label: 'Camps', module: 'camps' },
     { id: 'notifications', label: 'Notifications', module: 'notifications' }
@@ -41,10 +40,9 @@ const tabsByRole = {
   donor: [
     { id: 'overview', label: 'Overview', module: 'overview' },
     { id: 'profile', label: 'Profile', module: 'profile' },
-    { id: 'donor', label: 'Donor', module: 'donor' },
+    { id: 'donor', label: 'Donation', module: 'donor' },
     { id: 'stock', label: 'Stock', module: 'stock' },
     { id: 'search', label: 'Find Blood', module: 'search' },
-    { id: 'flow', label: 'Stock Flow', module: 'flow' },
     { id: 'sos', label: 'SOS', module: 'sos' },
     { id: 'camps', label: 'Camps', module: 'camps' },
     { id: 'notifications', label: 'Notifications', module: 'notifications' }
@@ -107,9 +105,6 @@ export default function DashboardPage() {
         <div className="glass-card max-w-xl rounded-2xl p-6">
           <h2 className="text-2xl font-extrabold">Profile Service Unavailable</h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{authError}</p>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            This is usually a backend URL/server issue, not a missing profile.
-          </p>
         </div>
       </div>
     );

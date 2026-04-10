@@ -3,11 +3,17 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { firestore } from '../../lib/firebase.js';
 import { listStockFlowEvents } from './stockApi.js';
 
-export const useRealtimeStockFlow = () => {
+export const useRealtimeStockFlow = (profile) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!profile || !['hospital', 'blood_bank', 'admin'].includes(profile.role)) {
+      setItems([]);
+      setLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     const loadFromApi = async () => {
@@ -33,7 +39,10 @@ export const useRealtimeStockFlow = () => {
       q,
       (snapshot) => {
         if (!active) return;
-        const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        let rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        if (profile.role !== 'admin') {
+          rows = rows.filter((row) => row.sourceUid === profile.uid || row.actorUid === profile.uid);
+        }
         setItems(rows);
         setLoading(false);
       },
@@ -46,7 +55,7 @@ export const useRealtimeStockFlow = () => {
       active = false;
       unsub();
     };
-  }, []);
+  }, [profile]);
 
   return { items, loading };
 };

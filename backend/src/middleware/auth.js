@@ -1,5 +1,6 @@
 import { auth as firebaseAuth, db } from '../config/firebase.js';
 import { AppError } from '../utils/http.js';
+import { normalizeCommunityRole } from '../utils/constants.js';
 
 const getToken = (header) => {
   if (!header) return null;
@@ -25,7 +26,7 @@ export const authenticate = async (req, _res, next) => {
     req.user = {
       uid: decoded.uid,
       email: decoded.email,
-      role: userData?.role || decoded.role || 'user',
+      role: normalizeCommunityRole(userData?.role || decoded.role || 'user'),
       isVerified: Boolean(userData?.isVerified),
       profile: userData
     };

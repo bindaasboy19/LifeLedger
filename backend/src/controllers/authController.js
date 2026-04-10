@@ -1,6 +1,6 @@
 import { db } from '../config/firebase.js';
 import { asyncHandler, AppError } from '../utils/http.js';
-import { COMMUNITY_ROLES, ROLES } from '../utils/constants.js';
+import { isCommunityRole, normalizeCommunityRole, ROLES } from '../utils/constants.js';
 
 const enforceRoleRules = (profile) => {
   if (!profile.displayName) {
@@ -9,25 +9,29 @@ const enforceRoleRules = (profile) => {
   if (!profile.phone) {
     throw new AppError('Profile requires phone number', 400);
   }
-  if (!profile.bloodGroup) {
+  if (normalizeCommunityRole(profile.role) === ROLES.USER && !profile.bloodGroup) {
     throw new AppError('Profile requires bloodGroup', 400);
   }
-  if (!profile.location?.city || profile.location?.lat === undefined || profile.location?.lng === undefined) {
+  if (
+    !profile.location?.country ||
+    !profile.location?.state ||
+    !profile.location?.district ||
+    !profile.location?.address ||
+    profile.location?.lat === undefined ||
+    profile.location?.lng === undefined
+  ) {
     throw new AppError('Profile requires complete location details', 400);
   }
 };
 
-const shouldDefaultAvailability = (role) =>
-  [...COMMUNITY_ROLES, ROLES.HOSPITAL].includes(role);
-
-const isCommunityRole = (role) => COMMUNITY_ROLES.includes(role);
+const shouldDefaultAvailability = (role) => isCommunityRole(role);
 
 const assertRoleAssignmentAllowed = (requestedRole, existingProfile) => {
-  if (requestedRole !== ROLES.ADMIN) {
+  if (normalizeCommunityRole(requestedRole) !== ROLES.ADMIN) {
     return;
   }
 
-  if (existingProfile?.role === ROLES.ADMIN) {
+  if (normalizeCommunityRole(existingProfile?.role) === ROLES.ADMIN) {
     return;
   }
 
@@ -35,6 +39,31 @@ const assertRoleAssignmentAllowed = (requestedRole, existingProfile) => {
     'Admin profiles are private and can only be provisioned directly from the backend or database.',
     403
   );
+};
+
+const sanitizeProfileForRole = (profile) => {
+  const normalizedRole = normalizeCommunityRole(profile.role);
+  const next = {
+    ...profile,
+    role: normalizedRole,
+    location: {
+      ...profile.location,
+      city: profile.location?.city || profile.location?.district || ''
+    }
+  };
+
+  if (normalizedRole === ROLES.USER) {
+    if (next.availabilityStatus === undefined) {
+      next.availabilityStatus = true;
+    }
+    return next;
+  }
+
+  delete next.bloodGroup;
+  delete next.availabilityStatus;
+  delete next.lastDonationDate;
+
+  return next;
 };
 
 export const upsertProfile = asyncHandler(async (req, res) => {
@@ -48,32 +77,32 @@ export const upsertProfile = asyncHandler(async (req, res) => {
   const userRef = db.collection('users').doc(uid);
   const existing = await userRef.get();
   const existingProfile = existing.exists ? existing.data() : null;
+  const requestedRole = normalizeCommunityRole(payload.role);
+  const existingRole = normalizeCommunityRole(existingProfile?.role);
 
   if (
-    existingProfile?.role &&
-    existingProfile.role !== payload.role &&
-    !(isCommunityRole(existingProfile.role) && isCommunityRole(payload.role))
+    existingRole &&
+    existingRole !== requestedRole &&
+    !(isCommunityRole(existingRole) && isCommunityRole(requestedRole))
   ) {
     throw new AppError('Role cannot be changed after profile creation', 403);
   }
 
-  assertRoleAssignmentAllowed(payload.role, existingProfile);
-  enforceRoleRules(payload);
+  payload.role = requestedRole;
+  assertRoleAssignmentAllowed(requestedRole, existingProfile);
+  const sanitizedPayload = sanitizeProfileForRole(payload);
+  enforceRoleRules(sanitizedPayload);
 
-  if (shouldDefaultAvailability(payload.role) && payload.availabilityStatus === undefined) {
-    payload.availabilityStatus = true;
-  }
-
-  const nextProfile = {
+  const nextProfile = sanitizeProfileForRole({
     ...(existingProfile || {}),
-    ...payload,
+    ...sanitizedPayload,
     uid,
     email,
     isVerified: existing.exists ? existingProfile.isVerified : false,
     isBlocked: existing.exists ? existingProfile.isBlocked : false,
     updatedAt: new Date().toISOString(),
     createdAt: existing.exists ? existingProfile.createdAt : new Date().toISOString()
-  };
+  });
 
   await userRef.set(nextProfile, { merge: true });
 
@@ -108,14 +137,14 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
   }
 
   const existingProfile = existing.data();
-  const nextProfile = {
+  const nextProfile = sanitizeProfileForRole({
     ...existingProfile,
     ...payload,
     uid,
     email: existingProfile.email || email,
-    role: existingProfile.role,
+    role: normalizeCommunityRole(existingProfile.role),
     updatedAt: new Date().toISOString()
-  };
+  });
 
   enforceRoleRules(nextProfile);
 

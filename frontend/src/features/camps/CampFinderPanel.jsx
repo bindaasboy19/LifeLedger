@@ -16,7 +16,7 @@ import { useRealtimeCamps } from './useRealtimeCamps.js';
 import { useAppSelector } from '../../hooks/useStore.js';
 
 const organizerRoles = ['ngo', 'hospital', 'admin', 'blood_bank'];
-const communityRoles = ['user', 'donor'];
+const communityRoles = ['user'];
 
 const campStatus = (camp) => {
   const now = new Date();
@@ -46,6 +46,7 @@ export default function CampFinderPanel() {
     city: 'Delhi',
     startAt: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 16),
     endAt: new Date(Date.now() + 2.5 * 86400000).toISOString().slice(0, 16),
+    notificationRadiusKm: 25,
     requiredBloodGroups: ['O+'],
     email: '',
     phone: ''
@@ -108,7 +109,7 @@ export default function CampFinderPanel() {
           setManagedApplications(Object.fromEntries(applicationLists));
         }
       } catch (loadError) {
-        setError(loadError?.response?.data?.message || loadError?.message || 'Unable to load camp details.');
+        setError('Unable to load camp details right now.');
       }
     };
 
@@ -127,6 +128,7 @@ export default function CampFinderPanel() {
         organizer: form.organizer,
         startAt: new Date(form.startAt).toISOString(),
         endAt: new Date(form.endAt).toISOString(),
+        notificationRadiusKm: Number(form.notificationRadiusKm),
         location: {
           city: form.city,
           address: `${form.city} Camp Ground`,
@@ -149,7 +151,7 @@ export default function CampFinderPanel() {
         phone: ''
       }));
     } catch (submitError) {
-      setError(submitError?.response?.data?.message || submitError?.message || 'Unable to create camp.');
+      setError('Unable to create camp right now.');
     } finally {
       setSubmitting(false);
     }
@@ -161,7 +163,7 @@ export default function CampFinderPanel() {
       await applyForCamp(campId);
       setMyApplications(await listMyCampApplications());
     } catch (applyError) {
-      setError(applyError?.response?.data?.message || applyError?.message || 'Unable to apply for camp.');
+      setError('Unable to submit your camp application right now.');
     }
   };
 
@@ -178,9 +180,7 @@ export default function CampFinderPanel() {
       const refreshed = await listCampApplications(campId);
       setManagedApplications((prev) => ({ ...prev, [campId]: refreshed }));
     } catch (updateError) {
-      setError(
-        updateError?.response?.data?.message || updateError?.message || 'Unable to update camp application.'
-      );
+      setError('Unable to update this camp application right now.');
     }
   };
 
@@ -256,6 +256,15 @@ export default function CampFinderPanel() {
             className="rounded-lg border border-slate-300 px-2 py-2 dark:border-slate-700 dark:bg-slate-900"
           />
           <input
+            type="number"
+            min="1"
+            max="500"
+            value={form.notificationRadiusKm}
+            onChange={(event) => setForm((prev) => ({ ...prev, notificationRadiusKm: event.target.value }))}
+            className="rounded-lg border border-slate-300 px-2 py-2 dark:border-slate-700 dark:bg-slate-900"
+            placeholder="Reminder radius (km)"
+          />
+          <input
             type="email"
             placeholder="Contact email"
             value={form.email}
@@ -295,6 +304,7 @@ export default function CampFinderPanel() {
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge tone={toneForStatus(campStatus(camp))}>{campStatus(camp)}</Badge>
                   <p className="text-xs">Need: {(camp.requiredBloodGroups || []).join(', ')}</p>
+                  <p className="text-xs">Reminder radius: {camp.notificationRadiusKm || 25} km</p>
                 </div>
 
                 {isCommunity ? (
@@ -408,7 +418,7 @@ export default function CampFinderPanel() {
 
           {isOrganizer ? (
             <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-              <p className="text-sm font-semibold">Available Donor Registry</p>
+              <p className="text-sm font-semibold">Eligible User Directory</p>
               <div className="mt-2 max-h-56 space-y-2 overflow-auto">
                 {donorRegistry.map((member) => (
                   <div key={member.uid} className="rounded-lg bg-slate-50 p-2 text-sm dark:bg-slate-900/60">

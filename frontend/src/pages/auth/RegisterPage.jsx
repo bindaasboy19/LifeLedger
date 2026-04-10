@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser, saveProfile } from '../../features/auth/authService.js';
 import { useAppDispatch } from '../../hooks/useStore.js';
 import { setProfile, setSession } from '../../features/auth/authSlice.js';
-import { bloodGroups, cityCoordinates, roles } from '../../lib/options.js';
+import {
+  bloodGroups,
+  countries,
+  getDistrictsForState,
+  getLocationMeta,
+  getStatesForCountry,
+  roles
+} from '../../lib/options.js';
 import { getAuthErrorMessage } from '../../features/auth/authErrorMessage.js';
 
 export default function RegisterPage() {
@@ -14,13 +21,22 @@ export default function RegisterPage() {
     email: '',
     password: '',
     phone: '',
-    role: 'user',
-    bloodGroup: 'O+',
-    city: 'Delhi',
-    address: ''
+    role: '',
+    bloodGroup: '',
+    country: '',
+    state: '',
+    district: '',
+    addressLine: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isIndividual = form.role === 'user';
+  const stateOptions = useMemo(() => getStatesForCountry(form.country), [form.country]);
+  const districtOptions = useMemo(
+    () => getDistrictsForState(form.country, form.state),
+    [form.country, form.state]
+  );
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -28,24 +44,28 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      const locationMeta = getLocationMeta(form.country, form.state, form.district);
+      if (!locationMeta) {
+        throw new Error('Please complete your address selection.');
+      }
+
       const user = await registerUser({ email: form.email, password: form.password });
       const token = await user.getIdToken();
       dispatch(setSession({ user, token }));
 
-      const coords = cityCoordinates[form.city];
       const payload = {
         displayName: form.displayName,
         phone: form.phone,
         role: form.role,
-        bloodGroup: form.bloodGroup,
-        ...(form.role === 'user' || form.role === 'donor' || form.role === 'hospital'
-          ? { availabilityStatus: true }
-          : {}),
+        ...(isIndividual ? { bloodGroup: form.bloodGroup, availabilityStatus: true } : {}),
         location: {
-          city: form.city,
-          address: form.address.trim(),
-          lat: coords.lat,
-          lng: coords.lng
+          country: form.country,
+          state: form.state,
+          district: form.district,
+          city: form.district,
+          address: form.addressLine.trim(),
+          lat: locationMeta.lat,
+          lng: locationMeta.lng
         }
       };
 
@@ -64,18 +84,18 @@ export default function RegisterPage() {
       <div className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-brand-300/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-12 bottom-12 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl" />
 
-      <form onSubmit={onSubmit} className="glass-card relative mx-auto w-full max-w-xl rounded-3xl p-6 space-y-4 md:p-8">
+      <form onSubmit={onSubmit} className="glass-card relative mx-auto w-full max-w-2xl rounded-3xl p-6 space-y-4 md:p-8">
         <Link to="/" className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-700 dark:text-brand-300">
           LifeLedger
         </Link>
         <h1 className="text-3xl font-extrabold">Create Your Account</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Join as a community member, NGO, hospital, or blood bank. Admin access is provisioned privately.
+          Register as an individual user or as an organisation. Admin access is provisioned privately.
         </p>
         <div className="grid gap-3 md:grid-cols-2">
           <input
             type="text"
-            placeholder="Full name"
+            placeholder="Full name or organization name"
             value={form.displayName}
             onChange={(event) => setForm((prev) => ({ ...prev, displayName: event.target.value }))}
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
@@ -108,40 +128,100 @@ export default function RegisterPage() {
           />
           <select
             value={form.role}
-            onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                role: event.target.value,
+                bloodGroup: event.target.value === 'user' ? prev.bloodGroup : ''
+              }))
+            }
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+            required
           >
             {roles.map((role) => (
-              <option key={role.value} value={role.value}>
+              <option key={role.value} value={role.value} disabled={role.disabled}>
                 {role.label}
               </option>
             ))}
           </select>
+          {isIndividual ? (
+            <select
+              value={form.bloodGroup}
+              onChange={(event) => setForm((prev) => ({ ...prev, bloodGroup: event.target.value }))}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+              required
+            >
+              <option value="">Please select blood group</option>
+              {bloodGroups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+              Blood group is only required for individual users.
+            </div>
+          )}
           <select
-            value={form.city}
-            onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
+            value={form.country}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                country: event.target.value,
+                state: '',
+                district: ''
+              }))
+            }
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+            required
           >
-            {Object.keys(cityCoordinates).map((city) => (
-              <option key={city} value={city}>
-                {city}
+            <option value="">Please select country</option>
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
               </option>
             ))}
           </select>
           <select
-            value={form.bloodGroup}
-            onChange={(event) => setForm((prev) => ({ ...prev, bloodGroup: event.target.value }))}
+            value={form.state}
+            onChange={(event) =>
+              setForm((prev) => ({
+                ...prev,
+                state: event.target.value,
+                district: ''
+              }))
+            }
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+            disabled={!form.country}
+            required
           >
-            {bloodGroups.map((group) => (
-              <option key={group}>{group}</option>
+            <option value="">Please select state</option>
+            {stateOptions.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.district}
+            onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
+            disabled={!form.state}
+            required
+          >
+            <option value="">Please select district</option>
+            {districtOptions.map((district) => (
+              <option key={district} value={district}>
+                {district}
+              </option>
             ))}
           </select>
           <input
             type="text"
-            placeholder="Address"
-            value={form.address}
-            onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))}
+            placeholder="Address line"
+            value={form.addressLine}
+            onChange={(event) => setForm((prev) => ({ ...prev, addressLine: event.target.value }))}
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 md:col-span-2 dark:border-slate-700 dark:bg-slate-900"
             required
           />

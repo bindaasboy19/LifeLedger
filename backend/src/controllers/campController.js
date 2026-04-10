@@ -8,7 +8,7 @@ import {
 } from '../services/notificationService.js';
 import { DonationHistory } from '../models/DonationHistory.js';
 import { DonationCertificate } from '../models/DonationCertificate.js';
-import { CAMP_ORGANIZER_ROLES, COMMUNITY_ROLES, ROLES } from '../utils/constants.js';
+import { CAMP_ORGANIZER_ROLES, isCommunityRole, ROLES } from '../utils/constants.js';
 
 const campsCollection = db.collection('donation_camps');
 const campApplicationsCollection = db.collection('camp_applications');
@@ -24,16 +24,14 @@ const parseCampStatus = (camp) => {
 };
 
 const listCommunityUsers = async () => {
-  const snapshots = await Promise.all(
-    COMMUNITY_ROLES.map((role) => db.collection('users').where('role', '==', role).get())
-  );
+  const snapshot = await db.collection('users').get();
 
-  return snapshots.flatMap((snapshot) =>
-    snapshot.docs.map((doc) => ({
+  return snapshot.docs
+    .map((doc) => ({
       uid: doc.id,
       ...doc.data()
     }))
-  );
+    .filter((user) => isCommunityRole(user.role));
 };
 
 const getCampOrThrow = async (campId) => {
@@ -100,7 +98,10 @@ export const listCamps = asyncHandler(async (req, res) => {
 });
 
 export const createCamp = asyncHandler(async (req, res) => {
-  const payload = req.body;
+  const payload = {
+    ...req.body,
+    notificationRadiusKm: Number(req.body.notificationRadiusKm || 25)
+  };
   const docRef = await campsCollection.add({
     ...payload,
     createdBy: req.user.uid,
@@ -113,7 +114,16 @@ export const createCamp = asyncHandler(async (req, res) => {
   const recipients = communityUsers.filter(
     (member) =>
       member.availabilityStatus !== false &&
-      payload.requiredBloodGroups.includes(member.bloodGroup)
+      payload.requiredBloodGroups.includes(member.bloodGroup) &&
+      (() => {
+        const distance = calculateDistanceKm(
+          payload.location?.lat,
+          payload.location?.lng,
+          member.location?.lat,
+          member.location?.lng
+        );
+        return distance !== null && distance <= payload.notificationRadiusKm;
+      })()
   );
 
   const msg = `${payload.name} donation camp on ${new Date(payload.startAt).toLocaleString()}`;
@@ -170,7 +180,7 @@ export const applyForCamp = asyncHandler(async (req, res) => {
   const camp = await getCampOrThrow(id);
   const campStatus = parseCampStatus(camp);
 
-  if (!COMMUNITY_ROLES.includes(req.user.role)) {
+  if (!isCommunityRole(req.user.role)) {
     throw new AppError('Only community members can apply for donation camps', 403);
   }
 

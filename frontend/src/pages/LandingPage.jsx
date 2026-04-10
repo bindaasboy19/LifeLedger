@@ -52,7 +52,7 @@ const roleJourneys = {
   },
   ngo: {
     title: 'NGO / Camp Organizer',
-    steps: ['Create and manage donation camps', 'Approve applicants and complete donations', 'Track donor lists and future blood demand']
+    steps: ['Create and manage donation camps', 'Approve applicants and complete donations', 'Track nearby user participation and future blood demand']
   },
   hospital: {
     title: 'Hospital / Blood Bank',
