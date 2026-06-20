@@ -18,6 +18,13 @@ export const locationSchema = z.object({
   lng: z.number()
 });
 
+const liveLocationSchema = z.object({
+  lat: z.number(),
+  lng: z.number(),
+  heading: z.number().nullable().optional(),
+  speed: z.number().nullable().optional()
+});
+
 const profileLocationSchema = locationSchema.superRefine((location, ctx) => {
   if (!location.country) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['country'], message: 'Country is required' });
@@ -86,7 +93,8 @@ export const sosCreateSchema = z.object({
 
 export const sosStatusUpdateSchema = z.object({
   status: z.enum(SOS_STATUSES),
-  reason: z.string().max(200).optional()
+  reason: z.string().max(200).optional(),
+  liveLocation: liveLocationSchema.optional()
 });
 
 export const donorProfileSchema = z.object({

@@ -79,6 +79,7 @@ export const env = {
     secure: String(process.env.EMAIL_SECURE || 'false') === 'true',
     user: clean(process.env.EMAIL_USER),
     pass: clean(process.env.EMAIL_PASS),
-    from: clean(process.env.EMAIL_FROM) || 'LifeLedger <noreply@lifeledger.app>'
+    from: clean(process.env.EMAIL_FROM) || 'LifeLedger <noreply@lifeledger.app>',
+    deliveryMode: clean(process.env.EMAIL_DELIVERY_MODE) || 'direct'
   }
 };

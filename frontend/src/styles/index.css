@@ -1,25 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --bg-soft:
-    radial-gradient(circle at 12% 18%, rgba(239, 68, 68, 0.14) 0%, rgba(239, 68, 68, 0) 36%),
-    radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 40%),
-    linear-gradient(180deg, #f7fbff 0%, #f1f6ff 55%, #f7f3ff 100%);
+    radial-gradient(circle at 12% 18%, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0) 34%),
+    radial-gradient(circle at 88% 12%, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0) 38%),
+    linear-gradient(180deg, #f8fbff 0%, #f4f8ff 48%, #fff9f4 100%);
   --card-bg: rgba(255, 255, 255, 0.82);
   --card-border: rgba(148, 163, 184, 0.24);
+  --page-accent: rgba(239, 68, 68, 0.14);
+  --page-accent-secondary: rgba(14, 165, 233, 0.14);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
+  --page-grid: rgba(148, 163, 184, 0.1);
 }
 
 .dark {
+  color-scheme: dark;
   --bg-soft:
-    radial-gradient(circle at 12% 18%, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0) 36%),
-    radial-gradient(circle at 88% 12%, rgba(14, 165, 233, 0.22) 0%, rgba(14, 165, 233, 0) 40%),
-    linear-gradient(180deg, #0a1222 0%, #070f1e 55%, #080917 100%);
+    radial-gradient(circle at 12% 18%, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0) 34%),
+    radial-gradient(circle at 88% 12%, rgba(14, 165, 233, 0.16) 0%, rgba(14, 165, 233, 0) 38%),
+    linear-gradient(180deg, #07111f 0%, #081426 52%, #0a1320 100%);
   --card-bg: rgba(15, 23, 42, 0.72);
   --card-border: rgba(100, 116, 139, 0.3);
+  --page-accent: rgba(239, 68, 68, 0.18);
+  --page-accent-secondary: rgba(14, 165, 233, 0.18);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.15);
+  --page-grid: rgba(148, 163, 184, 0.08);
 }
 
 body {
@@ -57,8 +65,8 @@ body {
 
 .section-card {
   box-shadow:
-    0 16px 36px -28px rgba(15, 23, 42, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    0 18px 42px -30px rgba(15, 23, 42, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .stat-card {
@@ -68,6 +76,211 @@ body {
     rgba(245, 250, 255, 0.8) 70%,
     rgba(255, 255, 255, 0.72) 100%
   );
+}
+
+.page-frame {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.page-frame__wash,
+.page-frame__grid,
+.page-frame__art {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+}
+
+.page-frame__wash {
+  z-index: -4;
+  background:
+    radial-gradient(circle at 14% 16%, var(--page-accent) 0%, transparent 32%),
+    radial-gradient(circle at 86% 14%, var(--page-accent-secondary) 0%, transparent 34%),
+    radial-gradient(circle at 50% 88%, var(--page-accent-tertiary) 0%, transparent 28%);
+  filter: saturate(112%);
+}
+
+.page-frame__grid {
+  z-index: -3;
+  opacity: 0.65;
+  background-image:
+    linear-gradient(to right, var(--page-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--page-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at center, black 24%, transparent 88%);
+}
+
+.page-frame__art--primary {
+  z-index: -2;
+}
+
+.page-frame__art--secondary {
+  z-index: -1;
+}
+
+.page-art-svg {
+  position: absolute;
+  width: min(40vw, 32rem);
+  height: auto;
+  right: clamp(-4rem, -2vw, 0rem);
+  top: clamp(4.5rem, 12vh, 9rem);
+  filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.06));
+}
+
+.page-art-shape {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.95;
+}
+
+.page-art-shape--one {
+  width: 18rem;
+  height: 18rem;
+  left: -5rem;
+  top: 12rem;
+  background: radial-gradient(circle, var(--page-accent-secondary) 0%, transparent 72%);
+}
+
+.page-art-shape--two {
+  width: 15rem;
+  height: 15rem;
+  right: 12%;
+  bottom: 8rem;
+  background: radial-gradient(circle, var(--page-accent) 0%, transparent 72%);
+}
+
+.page-art-shape--three {
+  width: 11rem;
+  height: 11rem;
+  left: 36%;
+  bottom: 18%;
+  background: radial-gradient(circle, var(--page-accent-tertiary) 0%, transparent 72%);
+}
+
+.page-frame__content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding-bottom: 4.75rem;
+}
+
+
+.page-frame__toolbar {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 65;
+}
+
+.page-theme-toggle {
+  min-width: 8.6rem;
+  justify-content: center;
+}
+
+.page-watermark {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.82);
+  color: rgba(248, 250, 252, 0.92);
+  padding: 0.55rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 28px -20px rgba(15, 23, 42, 0.75);
+}
+
+.page-watermark__heart {
+  color: #fb7185;
+  display: inline-block;
+  margin-inline: 0.18rem;
+  transform: translateY(1px);
+}
+
+.page-theme-landing {
+  --page-accent: rgba(239, 68, 68, 0.18);
+  --page-accent-secondary: rgba(14, 165, 233, 0.16);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
+}
+
+.page-theme-auth-login {
+  --page-accent: rgba(14, 165, 233, 0.16);
+  --page-accent-secondary: rgba(59, 130, 246, 0.16);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
+}
+
+.page-theme-auth-register {
+  --page-accent: rgba(16, 185, 129, 0.15);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(14, 165, 233, 0.12);
+}
+
+.page-theme-auth-onboarding {
+  --page-accent: rgba(10, 125, 255, 0.16);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.12);
+}
+
+.page-theme-dashboard-overview {
+  --page-accent: rgba(10, 125, 255, 0.15);
+  --page-accent-secondary: rgba(239, 68, 68, 0.14);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
+}
+
+.page-theme-dashboard-profile {
+  --page-accent: rgba(56, 189, 248, 0.16);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
+}
+
+.page-theme-dashboard-sos {
+  --page-accent: rgba(244, 63, 94, 0.18);
+  --page-accent-secondary: rgba(249, 115, 22, 0.15);
+  --page-accent-tertiary: rgba(251, 191, 36, 0.12);
+}
+
+.page-theme-dashboard-stock {
+  --page-accent: rgba(6, 182, 212, 0.17);
+  --page-accent-secondary: rgba(10, 125, 255, 0.15);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.1);
+}
+
+.page-theme-dashboard-camps {
+  --page-accent: rgba(16, 185, 129, 0.17);
+  --page-accent-secondary: rgba(59, 130, 246, 0.15);
+  --page-accent-tertiary: rgba(245, 158, 11, 0.12);
+}
+
+.page-theme-dashboard-ai {
+  --page-accent: rgba(59, 130, 246, 0.17);
+  --page-accent-secondary: rgba(20, 184, 166, 0.15);
+  --page-accent-tertiary: rgba(245, 158, 11, 0.12);
+}
+
+.page-theme-dashboard-admin {
+  --page-accent: rgba(245, 158, 11, 0.17);
+  --page-accent-secondary: rgba(239, 68, 68, 0.14);
+  --page-accent-tertiary: rgba(6, 182, 212, 0.12);
+}
+
+.page-theme-dashboard-notifications {
+  --page-accent: rgba(249, 115, 22, 0.18);
+  --page-accent-secondary: rgba(59, 130, 246, 0.13);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.11);
+}
+
+.page-theme-default {
+  --page-accent: rgba(10, 125, 255, 0.14);
+  --page-accent-secondary: rgba(239, 68, 68, 0.12);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.1);
 }
 
 h1,
@@ -107,4 +320,77 @@ h4 {
 
 .animate-fade-up {
   animation: fade-up 650ms ease-out both;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 650ms ease-out both;
+  animation-delay: 150ms;
+}
+
+@media (max-width: 768px) {
+  .page-art-svg {
+    width: min(58vw, 20rem);
+    top: 5.2rem;
+    right: -2rem;
+    opacity: 0.88;
+  }
+
+  .page-art-shape--one {
+    width: 12rem;
+    height: 12rem;
+    left: -3rem;
+  }
+
+  .page-art-shape--two {
+    width: 10rem;
+    height: 10rem;
+    right: -1rem;
+    bottom: 6rem;
+  }
+
+  .page-art-shape--three {
+    width: 8rem;
+    height: 8rem;
+    left: 42%;
+    bottom: 22%;
+  }
+
+  .page-frame__toolbar {
+    top: 0.8rem;
+    right: 0.8rem;
+  }
+
+  .page-theme-toggle {
+    min-width: auto;
+    font-size: 0.78rem;
+    padding-inline: 0.85rem;
+  }
+
+  .page-watermark {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 0.85rem;
+    max-width: calc(100vw - 1.5rem);
+    text-align: center;
+  }
+}
+
+@theme {
+  --font-sans: 'Sora', 'Manrope', ui-sans-serif, system-ui;
+  --font-display: 'Space Grotesk', 'Sora', ui-sans-serif, system-ui;
+
+  --color-brand-50: #eef8ff;
+  --color-brand-100: #d6edff;
+  --color-brand-200: #adddff;
+  --color-brand-300: #73c4ff;
+  --color-brand-400: #349fff;
+  --color-brand-500: #0a7dff;
+  --color-brand-600: #005fd6;
+  --color-brand-700: #004da3;
+  --color-brand-800: #074384;
+  --color-brand-900: #0d3a6e;
+
+  --color-surface-50: #f7f9fc;
+  --color-surface-900: #0f172a;
 }

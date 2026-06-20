@@ -12,6 +12,11 @@ const DonationCertificateSchema = new mongoose.Schema(
     organizerName: { type: String, required: true },
     bloodGroup: { type: String, required: true, index: true },
     units: { type: Number, required: true, min: 1 },
+    storagePath: { type: String, default: null },
+    fileUrl: { type: String, default: null },
+    fileContentType: { type: String, default: null },
+    generationStatus: { type: String, enum: ['ready', 'pending', 'failed'], default: 'pending' },
+    generationError: { type: String, default: null },
     issuedAt: { type: Date, required: true, default: Date.now }
   },
   {

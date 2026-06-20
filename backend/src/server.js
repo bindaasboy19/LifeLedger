@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { connectMongo } from './config/mongo.js';
 import { startCampReminderJob } from './jobs/campReminderJob.js';
+import { startSOSDispatchJob } from './jobs/sosDispatchJob.js';
 import mongoose from 'mongoose';
 
 const boot = async () => {
@@ -48,6 +49,7 @@ const boot = async () => {
   });
 
   startCampReminderJob();
+  startSOSDispatchJob();
 };
 
 boot().catch((error) => {

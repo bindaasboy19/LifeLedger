@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { firebaseAuth } from '../../lib/firebase.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/useStore.js';
 import { clearSession } from '../../features/auth/authSlice.js';
-import ThemeToggle from './ThemeToggle.jsx';
 import NotificationBell from './NotificationBell.jsx';
 
 const roleLabels = {
@@ -40,7 +39,6 @@ export default function AppLayout({ children, tabs = [], activeTab = 'overview' 
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <NotificationBell />
             <button
               onClick={onLogout}

@@ -119,7 +119,7 @@ export default function DashboardPage() {
       <StatCard label="Live stock rows" value={stock.items.length} accent="bg-brand-500" />
       <StatCard
         label="SOS active"
-        value={sos.items.filter((item) => !['completed', 'cancelled'].includes(item.status)).length}
+        value={sos.items.filter((item) => ['open', 'accepted', 'in_progress', 'pending_review'].includes(item.status)).length}
         accent="bg-rose-500"
       />
       <StatCard

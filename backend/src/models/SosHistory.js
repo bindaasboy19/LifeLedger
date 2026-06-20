@@ -7,23 +7,29 @@ const SosHistorySchema = new mongoose.Schema(
     assignedDonorUid: { type: String },
     bloodGroup: { type: String, required: true, index: true },
     urgency: { type: String, enum: ['low', 'medium', 'high', 'critical'], required: true },
+    verifiedStatus: { type: String, default: 'unverified' },
+    abuseScore: { type: Number, default: 0 },
+    abuseReasons: { type: [String], default: [] },
     location: {
       city: { type: String, index: true },
+      district: String,
+      state: String,
       address: String,
       lat: Number,
       lng: Number
     },
     status: {
       type: String,
-      enum: ['created', 'accepted', 'in_progress', 'completed', 'cancelled', 'rejected'],
-      default: 'created',
+      enum: ['open', 'accepted', 'in_progress', 'completed', 'cancelled', 'unmatched', 'pending_review', 'expired', 'rejected', 'created'],
+      default: 'open',
       index: true
     },
     timeline: [
       {
         status: String,
         changedBy: String,
-        at: { type: Date, default: Date.now }
+        at: { type: Date, default: Date.now },
+        reason: String
       }
     ]
   },

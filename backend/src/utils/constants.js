@@ -9,7 +9,18 @@ export const ROLES = {
 
 export const BLOOD_GROUPS = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
 
-export const SOS_STATUSES = ['created', 'accepted', 'in_progress', 'completed', 'cancelled', 'rejected'];
+export const SOS_STATUSES = [
+  'open',
+  'accepted',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'unmatched',
+  'pending_review',
+  'expired',
+  'rejected',
+  'created'
+];
 
 export const normalizeCommunityRole = (role) => (role === ROLES.DONOR ? ROLES.USER : role);
 

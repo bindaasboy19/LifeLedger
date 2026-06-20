@@ -313,9 +313,19 @@ export default function CampFinderPanel() {
                       <div className="flex items-center gap-2">
                         <Badge tone={toneForStatus(existingApplication.status)}>{existingApplication.status}</Badge>
                         {existingApplication.certificateNumber ? (
-                          <p className="text-xs text-slate-500 dark:text-slate-300">
-                            Certificate: {existingApplication.certificateNumber}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                            <p>Certificate: {existingApplication.certificateNumber}</p>
+                            {existingApplication.certificateFileUrl ? (
+                              <a
+                                href={existingApplication.certificateFileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-semibold text-brand-600"
+                              >
+                                Open certificate
+                              </a>
+                            ) : null}
+                          </div>
                         ) : null}
                       </div>
                     ) : campStatus(camp) !== 'completed' ? (
@@ -350,9 +360,22 @@ export default function CampFinderPanel() {
                             </p>
                           ) : null}
                           {application.certificateNumber ? (
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">
-                              Certificate: {application.certificateNumber}
-                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
+                              <p>Certificate: {application.certificateNumber}</p>
+                              {application.certificateFileUrl ? (
+                                <a
+                                  href={application.certificateFileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-semibold text-brand-600"
+                                >
+                                  Open certificate
+                                </a>
+                              ) : null}
+                              {application.certificateGenerationStatus === 'failed' ? (
+                                <span className="text-rose-600 dark:text-rose-300">Generation pending retry</span>
+                              ) : null}
+                            </div>
                           ) : null}
 
                           {application.status === 'pending' ? (
@@ -446,6 +469,16 @@ export default function CampFinderPanel() {
                         {certificate.certificateNumber} | {certificate.units} unit(s) |{' '}
                         {new Date(certificate.issuedAt).toLocaleDateString()}
                       </p>
+                      {certificate.fileUrl ? (
+                        <a
+                          href={certificate.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-1 inline-block text-xs font-semibold text-brand-600"
+                        >
+                          Open certificate
+                        </a>
+                      ) : null}
                     </div>
                   ))
                 )}

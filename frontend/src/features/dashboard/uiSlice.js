@@ -1,5 +1,19 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const THEME_STORAGE_KEY = 'lifeledger_theme';
+
+const applyTheme = (theme) => {
+  const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+  const isDark = resolvedTheme === 'dark';
+
+  localStorage.setItem(THEME_STORAGE_KEY, resolvedTheme);
+  document.documentElement.classList.toggle('dark', isDark);
+  document.documentElement.dataset.theme = resolvedTheme;
+  document.documentElement.style.colorScheme = resolvedTheme;
+
+  return isDark;
+};
+
 const initialState = {
   darkMode: false,
   sidebarOpen: true
@@ -10,14 +24,11 @@ const uiSlice = createSlice({
   initialState,
   reducers: {
     hydrateTheme(state) {
-      const stored = localStorage.getItem('lifeledger_theme');
-      state.darkMode = stored === 'dark';
-      document.documentElement.classList.toggle('dark', state.darkMode);
+      const stored = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+      state.darkMode = applyTheme(stored);
     },
     toggleTheme(state) {
-      state.darkMode = !state.darkMode;
-      localStorage.setItem('lifeledger_theme', state.darkMode ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', state.darkMode);
+      state.darkMode = applyTheme(state.darkMode ? 'light' : 'dark');
     },
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;

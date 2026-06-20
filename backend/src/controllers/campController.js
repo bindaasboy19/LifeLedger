@@ -8,10 +8,24 @@ import {
 } from '../services/notificationService.js';
 import { DonationHistory } from '../models/DonationHistory.js';
 import { DonationCertificate } from '../models/DonationCertificate.js';
+import { generateDonationCertificateFile } from '../services/certificateService.js';
+import { getDonationCooldownDays } from '../services/sosEligibilityService.js';
 import { CAMP_ORGANIZER_ROLES, isCommunityRole, ROLES } from '../utils/constants.js';
+import { logAudit } from '../services/auditService.js';
 
 const campsCollection = db.collection('donation_camps');
 const campApplicationsCollection = db.collection('camp_applications');
+const bloodStockCollection = db.collection('blood_stock');
+
+const nowIso = () => new Date().toISOString();
+
+const safeAudit = async (payload) => {
+  try {
+    await logAudit(payload);
+  } catch {
+    // ignore audit failure
+  }
+};
 
 const parseCampStatus = (camp) => {
   const now = new Date();
@@ -27,10 +41,7 @@ const listCommunityUsers = async () => {
   const snapshot = await db.collection('users').get();
 
   return snapshot.docs
-    .map((doc) => ({
-      uid: doc.id,
-      ...doc.data()
-    }))
+    .map((doc) => ({ uid: doc.id, ...doc.data() }))
     .filter((user) => isCommunityRole(user.role));
 };
 
@@ -58,15 +69,12 @@ const ensureCampManager = (camp, user) => {
 
 const getApplicationSnapshotByCamp = async (campId) => {
   const snapshot = await campApplicationsCollection.where('campId', '==', campId).get();
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };
 
-const generateCertificateNumber = (donorUid) => {
+const generateCertificateNumber = (userUid) => {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  return `LL-${stamp}-${donorUid.slice(-4).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+  return `LL-${stamp}-${userUid.slice(-4).toUpperCase()}-${Date.now().toString().slice(-6)}`;
 };
 
 export const listCamps = asyncHandler(async (req, res) => {
@@ -102,12 +110,14 @@ export const createCamp = asyncHandler(async (req, res) => {
     ...req.body,
     notificationRadiusKm: Number(req.body.notificationRadiusKm || 25)
   };
+  const createdAt = nowIso();
+
   const docRef = await campsCollection.add({
     ...payload,
     createdBy: req.user.uid,
     createdByRole: req.user.role,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt,
+    updatedAt: createdAt
   });
 
   const communityUsers = await listCommunityUsers();
@@ -143,8 +153,19 @@ export const createCamp = asyncHandler(async (req, res) => {
     html: `<p>${msg}</p>`
   });
 
-  const created = await docRef.get();
+  await safeAudit({
+    actorUid: req.user.uid,
+    actorRole: req.user.role,
+    action: 'camp_created',
+    targetType: 'camp',
+    targetId: docRef.id,
+    metadata: {
+      requiredBloodGroups: payload.requiredBloodGroups,
+      radius: payload.notificationRadiusKm
+    }
+  });
 
+  const created = await docRef.get();
   res.status(201).json({ success: true, data: { id: created.id, ...created.data() } });
 });
 
@@ -156,7 +177,7 @@ export const updateCamp = asyncHandler(async (req, res) => {
   await campsCollection.doc(id).set(
     {
       ...req.body,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowIso(),
       updatedBy: req.user.uid
     },
     { merge: true }
@@ -212,8 +233,8 @@ export const applyForCamp = asyncHandler(async (req, res) => {
     notes: req.body.notes || null,
     status: 'pending',
     organizerUid: camp.createdBy,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: nowIso(),
+    updatedAt: nowIso()
   });
 
   await createNotification({
@@ -222,9 +243,7 @@ export const applyForCamp = asyncHandler(async (req, res) => {
     message: `${profile.displayName || 'A community member'} applied to ${camp.name}.`,
     type: 'camp',
     referenceId: id,
-    metadata: {
-      applicationId: applicationRef.id
-    }
+    metadata: { applicationId: applicationRef.id }
   });
 
   const created = await applicationRef.get();
@@ -275,7 +294,7 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
     reviewedBy: req.user.uid,
     reviewedByRole: req.user.role,
     reviewNotes: notes || null,
-    updatedAt: new Date().toISOString()
+    updatedAt: nowIso()
   };
 
   if (status === 'completed') {
@@ -285,6 +304,8 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
 
     const donorProfileDoc = await db.collection('users').doc(application.applicantUid).get();
     const donorProfile = donorProfileDoc.exists ? donorProfileDoc.data() : {};
+    const organizerProfileDoc = await db.collection('users').doc(req.user.uid).get();
+    const organizerProfile = organizerProfileDoc.exists ? organizerProfileDoc.data() : {};
     const donatedAt = new Date();
 
     const donation = await DonationHistory.create({
@@ -295,9 +316,6 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
       location: camp.location,
       donatedAt
     });
-
-    const organizerProfileDoc = await db.collection('users').doc(req.user.uid).get();
-    const organizerProfile = organizerProfileDoc.exists ? organizerProfileDoc.data() : {};
 
     const certificate = await DonationCertificate.create({
       certificateNumber: generateCertificateNumber(application.applicantUid),
@@ -310,14 +328,68 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
       organizerName: organizerProfile.displayName || req.user.email || req.user.uid,
       bloodGroup: application.bloodGroup || donorProfile.bloodGroup,
       units,
+      generationStatus: 'pending',
       issuedAt: donatedAt
+    });
+
+    let certificateFile = null;
+    let generationStatus = 'ready';
+    let generationError = null;
+
+    try {
+      certificateFile = await generateDonationCertificateFile({
+        certificateNumber: certificate.certificateNumber,
+        donorUid: application.applicantUid,
+        donorName: application.applicantName,
+        bloodGroup: application.bloodGroup || donorProfile.bloodGroup,
+        issuedAt: donatedAt,
+        campId: id,
+        campName: camp.name,
+        organizerName: organizerProfile.displayName || req.user.email || req.user.uid,
+        units
+      });
+    } catch (error) {
+      generationStatus = 'failed';
+      generationError = error.message || 'certificate-generation-failed';
+    }
+
+    await DonationCertificate.updateOne(
+      { _id: certificate._id },
+      {
+        $set: {
+          storagePath: certificateFile?.storagePath || null,
+          fileUrl: certificateFile?.publicUrl || null,
+          fileContentType: certificateFile?.contentType || null,
+          generationStatus,
+          generationError
+        }
+      }
+    );
+
+    await bloodStockCollection.add({
+      bloodGroup: application.bloodGroup || donorProfile.bloodGroup,
+      units,
+      expiryDate: new Date(donatedAt.getTime() + 35 * 24 * 60 * 60 * 1000).toISOString(),
+      collectionDate: donatedAt.toISOString(),
+      location: camp.location,
+      sourceType: req.user.role,
+      createdBy: req.user.uid,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      sourceReference: {
+        campId: id,
+        applicationId
+      }
     });
 
     await db.collection('users').doc(application.applicantUid).set(
       {
         lastDonationDate: donatedAt.toISOString(),
         availabilityStatus: false,
-        updatedAt: new Date().toISOString()
+        nextEligibleAt: new Date(
+          donatedAt.getTime() + getDonationCooldownDays(donorProfile) * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        updatedAt: nowIso()
       },
       { merge: true }
     );
@@ -327,7 +399,11 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
       units,
       donationRecordId: donation._id.toString(),
       certificateId: certificate._id.toString(),
-      certificateNumber: certificate.certificateNumber
+      certificateNumber: certificate.certificateNumber,
+      certificateFileUrl: certificateFile?.publicUrl || null,
+      certificateStoragePath: certificateFile?.storagePath || null,
+      certificateGenerationStatus: generationStatus,
+      certificateGenerationError: generationError
     });
   }
 
@@ -338,15 +414,25 @@ export const updateCampApplication = asyncHandler(async (req, res) => {
     title: 'Camp Application Updated',
     message:
       status === 'completed'
-        ? `Your donation for ${camp.name} was completed and certificate ${nextPayload.certificateNumber} is ready.`
+        ? `Your donation for ${camp.name} was completed${nextPayload.certificateNumber ? ` and certificate ${nextPayload.certificateNumber} is ready.` : '.'}`
         : `Your camp application for ${camp.name} is now ${status}.`,
     type: 'camp',
     referenceId: id,
     metadata: {
       applicationId,
       status,
-      certificateNumber: nextPayload.certificateNumber || null
+      certificateNumber: nextPayload.certificateNumber || null,
+      certificateFileUrl: nextPayload.certificateFileUrl || null
     }
+  });
+
+  await safeAudit({
+    actorUid: req.user.uid,
+    actorRole: req.user.role,
+    action: `camp_application_${status}`,
+    targetType: 'camp_application',
+    targetId: applicationId,
+    metadata: { campId: id, units: units || null }
   });
 
   const updated = await applicationRef.get();

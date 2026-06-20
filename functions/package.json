@@ -1,0 +1,19 @@
+{
+  "name": "lifeledger-functions",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.8.0",
+    "firebase-functions": "^7.2.5",
+    "firebase-tools": "^15.16.0",
+    "nodemailer": "^8.0.7"
+  }
+}
