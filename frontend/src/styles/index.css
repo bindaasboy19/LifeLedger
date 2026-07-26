@@ -70,12 +70,10 @@ body {
 }
 
 .stat-card {
-  background-image: linear-gradient(
-    140deg,
-    rgba(15, 23, 42, 0.95) 0%,
-    rgba(30, 41, 59, 0.9) 70%,
-    rgba(15, 23, 42, 0.85) 100%
-  );
+  background-image: linear-gradient(140deg,
+      rgba(15, 23, 42, 0.95) 0%,
+      rgba(30, 41, 59, 0.9) 70%,
+      rgba(15, 23, 42, 0.85) 100%);
   border: 1px solid rgba(71, 85, 105, 0.5);
 }
 
@@ -123,42 +121,41 @@ body {
 
 .page-art-svg {
   position: absolute;
-  width: min(45vw, 36rem);
+  width: min(40vw, 32rem);
   height: auto;
-  right: clamp(-3rem, 1vw, 2rem);
-  top: clamp(4rem, 10vh, 8rem);
-  filter: drop-shadow(0 0 45px rgba(255, 255, 255, 0.12));
-  opacity: 0.85;
+  right: clamp(-4rem, -2vw, 0rem);
+  top: clamp(4.5rem, 12vh, 9rem);
+  filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.06));
 }
 
 .page-art-shape {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(64px);
+  filter: blur(56px);
   opacity: 0.95;
 }
 
 .page-art-shape--one {
-  width: 22rem;
-  height: 22rem;
-  left: -4rem;
-  top: 10rem;
+  width: 18rem;
+  height: 18rem;
+  left: -5rem;
+  top: 12rem;
   background: radial-gradient(circle, var(--page-accent-secondary) 0%, transparent 72%);
 }
 
 .page-art-shape--two {
-  width: 18rem;
-  height: 18rem;
-  right: 8%;
-  bottom: 6rem;
+  width: 15rem;
+  height: 15rem;
+  right: 12%;
+  bottom: 8rem;
   background: radial-gradient(circle, var(--page-accent) 0%, transparent 72%);
 }
 
 .page-art-shape--three {
-  width: 14rem;
-  height: 14rem;
-  left: 32%;
-  bottom: 14%;
+  width: 11rem;
+  height: 11rem;
+  left: 36%;
+  bottom: 18%;
   background: radial-gradient(circle, var(--page-accent-tertiary) 0%, transparent 72%);
 }
 
@@ -166,80 +163,117 @@ body {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  padding-bottom: 2rem;
-  background: transparent;
+  padding-bottom: 4.75rem;
+}
+
+
+.page-frame__toolbar {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 65;
+}
+
+.page-theme-toggle {
+  min-width: 8.6rem;
+  justify-content: center;
+}
+
+.page-watermark {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(15, 23, 42, 0.82);
+  color: rgba(248, 250, 252, 0.92);
+  padding: 0.55rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 28px -20px rgba(15, 23, 42, 0.75);
+}
+
+.page-watermark__heart {
+  color: #fb7185;
+  display: inline-block;
+  margin-inline: 0.18rem;
+  transform: translateY(1px);
 }
 
 .page-theme-landing {
-  --page-accent: rgba(225, 29, 72, 0.24);
-  --page-accent-secondary: rgba(14, 165, 233, 0.22);
-  --page-accent-tertiary: rgba(16, 185, 129, 0.16);
+  --page-accent: rgba(239, 68, 68, 0.18);
+  --page-accent-secondary: rgba(14, 165, 233, 0.16);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
 }
 
 .page-theme-auth-login {
-  --page-accent: rgba(14, 165, 233, 0.24);
-  --page-accent-secondary: rgba(59, 130, 246, 0.22);
-  --page-accent-tertiary: rgba(16, 185, 129, 0.16);
+  --page-accent: rgba(14, 165, 233, 0.16);
+  --page-accent-secondary: rgba(59, 130, 246, 0.16);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
 }
 
 .page-theme-auth-register {
-  --page-accent: rgba(16, 185, 129, 0.24);
-  --page-accent-secondary: rgba(245, 158, 11, 0.20);
-  --page-accent-tertiary: rgba(14, 165, 233, 0.16);
+  --page-accent: rgba(16, 185, 129, 0.15);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(14, 165, 233, 0.12);
 }
 
 .page-theme-auth-onboarding {
-  --page-accent: rgba(14, 165, 233, 0.24);
-  --page-accent-secondary: rgba(245, 158, 11, 0.20);
-  --page-accent-tertiary: rgba(225, 29, 72, 0.16);
+  --page-accent: rgba(10, 125, 255, 0.16);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.12);
 }
 
 .page-theme-dashboard-overview {
-  --page-accent: rgba(225, 29, 72, 0.24);
-  --page-accent-secondary: rgba(14, 165, 233, 0.22);
-  --page-accent-tertiary: rgba(16, 185, 129, 0.16);
+  --page-accent: rgba(10, 125, 255, 0.15);
+  --page-accent-secondary: rgba(239, 68, 68, 0.14);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
 }
 
 .page-theme-dashboard-profile {
-  --page-accent: rgba(168, 85, 247, 0.26);
-  --page-accent-secondary: rgba(139, 92, 246, 0.22);
-  --page-accent-tertiary: rgba(14, 165, 233, 0.16);
+  --page-accent: rgba(56, 189, 248, 0.16);
+  --page-accent-secondary: rgba(245, 158, 11, 0.14);
+  --page-accent-tertiary: rgba(16, 185, 129, 0.12);
 }
 
 .page-theme-dashboard-sos {
-  --page-accent: rgba(225, 29, 72, 0.28);
-  --page-accent-secondary: rgba(244, 63, 94, 0.22);
-  --page-accent-tertiary: rgba(239, 68, 68, 0.18);
+  --page-accent: rgba(244, 63, 94, 0.18);
+  --page-accent-secondary: rgba(249, 115, 22, 0.15);
+  --page-accent-tertiary: rgba(251, 191, 36, 0.12);
 }
 
 .page-theme-dashboard-stock {
-  --page-accent: rgba(6, 182, 212, 0.26);
-  --page-accent-secondary: rgba(14, 165, 233, 0.22);
-  --page-accent-tertiary: rgba(59, 130, 246, 0.16);
+  --page-accent: rgba(6, 182, 212, 0.17);
+  --page-accent-secondary: rgba(10, 125, 255, 0.15);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.1);
 }
 
 .page-theme-dashboard-camps {
-  --page-accent: rgba(16, 185, 129, 0.26);
-  --page-accent-secondary: rgba(20, 184, 166, 0.22);
-  --page-accent-tertiary: rgba(59, 130, 246, 0.16);
+  --page-accent: rgba(16, 185, 129, 0.17);
+  --page-accent-secondary: rgba(59, 130, 246, 0.15);
+  --page-accent-tertiary: rgba(245, 158, 11, 0.12);
 }
 
 .page-theme-dashboard-ai {
-  --page-accent: rgba(99, 102, 241, 0.26);
-  --page-accent-secondary: rgba(14, 165, 233, 0.22);
-  --page-accent-tertiary: rgba(168, 85, 247, 0.16);
+  --page-accent: rgba(59, 130, 246, 0.17);
+  --page-accent-secondary: rgba(20, 184, 166, 0.15);
+  --page-accent-tertiary: rgba(245, 158, 11, 0.12);
 }
 
 .page-theme-dashboard-admin {
-  --page-accent: rgba(245, 158, 11, 0.26);
-  --page-accent-secondary: rgba(217, 119, 6, 0.22);
-  --page-accent-tertiary: rgba(225, 29, 72, 0.16);
+  --page-accent: rgba(245, 158, 11, 0.17);
+  --page-accent-secondary: rgba(239, 68, 68, 0.14);
+  --page-accent-tertiary: rgba(6, 182, 212, 0.12);
 }
 
 .page-theme-dashboard-notifications {
-  --page-accent: rgba(249, 115, 22, 0.26);
-  --page-accent-secondary: rgba(234, 88, 12, 0.22);
-  --page-accent-tertiary: rgba(225, 29, 72, 0.16);
+  --page-accent: rgba(249, 115, 22, 0.18);
+  --page-accent-secondary: rgba(59, 130, 246, 0.13);
+  --page-accent-tertiary: rgba(239, 68, 68, 0.11);
 }
 
 .page-theme-default {
@@ -260,9 +294,11 @@ h4 {
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   50% {
     transform: translate3d(0, -12px, 0);
   }
+
   100% {
     transform: translate3d(0, 0, 0);
   }
@@ -273,6 +309,7 @@ h4 {
     opacity: 0;
     transform: translateY(12px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
