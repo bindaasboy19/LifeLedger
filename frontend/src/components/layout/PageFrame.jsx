@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
-import ThemeToggle from './ThemeToggle.jsx';
 
 const getThemeFromRoute = (pathname, searchParams) => {
   if (pathname === '/') return 'landing';
@@ -197,15 +196,7 @@ export default function PageFrame({ children }) {
         <DecorativeShape className="page-art-shape--three" />
       </div>
 
-      <div className="page-frame__toolbar">
-        <ThemeToggle className="page-theme-toggle" />
-      </div>
-
       <div className="page-frame__content">{children}</div>
-
-      <div className="page-watermark" aria-hidden="true">
-        made with <span className="page-watermark__heart">❤</span> by Sanjeev Chaurasia
-      </div>
     </div>
   );
 }

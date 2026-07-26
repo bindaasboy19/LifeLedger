@@ -43,7 +43,7 @@ const logFailure = async (payload) => {
 export const processEmailJob = onDocumentCreated(
   {
     document: 'email_jobs/{jobId}',
-    region: process.env.FUNCTION_REGION || 'asia-south1',
+    region: process.env.DEPLOYMENT_REGION || process.env.LOCATION_ID || 'asia-south1',
     retry: false
   },
   async (event) => {

@@ -15,13 +15,20 @@ const cleanEnv = (value) => {
 
 const normalizeApiBaseUrl = (value) => {
   const cleaned = cleanEnv(value);
-  if (!cleaned) return 'http://localhost:5000/api';
+  if (!cleaned) return 'http://localhost:5001/api';
 
-  const withScheme = /^https?:\/\//i.test(cleaned)
-    ? cleaned
-    : cleaned.includes('localhost') || cleaned.includes('127.0.0.1')
-      ? `http://${cleaned}`
-      : `https://${cleaned}`;
+  const tokens = cleaned.split(',').map((t) => t.trim()).filter(Boolean);
+  let target = tokens[0] || '';
+  if (import.meta.env.DEV && tokens.length > 1) {
+    const localToken = tokens.find((t) => t.includes('localhost') || t.includes('127.0.0.1'));
+    if (localToken) target = localToken;
+  }
+
+  const withScheme = /^https?:\/\//i.test(target)
+    ? target
+    : target.includes('localhost') || target.includes('127.0.0.1')
+      ? `http://${target}`
+      : `https://${target}`;
 
   try {
     const url = new URL(withScheme);
@@ -29,7 +36,7 @@ const normalizeApiBaseUrl = (value) => {
     url.pathname = pathname.endsWith('/api') ? pathname : `${pathname || ''}/api`;
     return url.toString().replace(/\/$/, '');
   } catch {
-    return 'http://localhost:5000/api';
+    return 'http://localhost:5001/api';
   }
 };
 

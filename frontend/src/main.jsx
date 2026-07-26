@@ -4,21 +4,21 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import App from './App.jsx';
 import { store } from './app/store.js';
+import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
+import 'leaflet/dist/leaflet.css';
 import './styles/index.css';
 
-const THEME_STORAGE_KEY = 'lifeledger_theme';
-const storedTheme = globalThis.localStorage?.getItem(THEME_STORAGE_KEY) || 'light';
-const resolvedTheme = storedTheme === 'dark' ? 'dark' : 'light';
-
-document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-document.documentElement.dataset.theme = resolvedTheme;
-document.documentElement.style.colorScheme = resolvedTheme;
-globalThis.localStorage?.setItem(THEME_STORAGE_KEY, resolvedTheme);
+document.documentElement.classList.add('dark');
+document.documentElement.dataset.theme = 'dark';
+document.documentElement.style.colorScheme = 'dark';
+globalThis.localStorage?.setItem('lifeledger_theme', 'dark');
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </Provider>
+  <ErrorBoundary>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
+  </ErrorBoundary>
 );

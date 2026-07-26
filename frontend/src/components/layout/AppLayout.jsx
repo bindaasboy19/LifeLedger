@@ -1,8 +1,10 @@
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { firebaseAuth } from '../../lib/firebase.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/useStore.js';
 import { clearSession } from '../../features/auth/authSlice.js';
 import NotificationBell from './NotificationBell.jsx';
+import Footer from './Footer.jsx';
 
 const roleLabels = {
   user: 'Community Member',
@@ -11,6 +13,14 @@ const roleLabels = {
   hospital: 'Hospital',
   blood_bank: 'Blood Bank',
   admin: 'Admin'
+};
+
+const roleBadgeColor = {
+  admin: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  hospital: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+  blood_bank: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+  ngo: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+  user: 'bg-red-500/10 text-red-400 border-red-500/30'
 };
 
 export default function AppLayout({ children, tabs = [], activeTab = 'overview' }) {
@@ -24,55 +34,116 @@ export default function AppLayout({ children, tabs = [], activeTab = 'overview' 
     navigate('/login');
   };
 
-  return (
-    <div className="dashboard-shell min-h-screen px-4 py-5 md:px-8">
-      <header className="relative mb-6 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/75 p-4 shadow-xl backdrop-blur-xl dark:border-slate-700/60 dark:bg-slate-900/70 md:p-5">
-        <div className="pointer-events-none absolute -left-20 top-0 h-36 w-36 rounded-full bg-brand-300/30 blur-2xl" />
-        <div className="pointer-events-none absolute -right-20 bottom-0 h-36 w-36 rounded-full bg-rose-300/25 blur-2xl" />
+  const userRole = profile?.role || 'user';
+  const roleBadgeStyle = roleBadgeColor[userRole] || roleBadgeColor.user;
 
-        <div className="relative flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-brand-700 dark:text-brand-300">LifeLedger</p>
-            <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Emergency Blood Intelligence Hub</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {profile?.displayName || 'User'} | {roleLabels[profile?.role] || 'Role not set'}
-            </p>
+  return (
+    <div className="min-h-screen flex flex-col bg-transparent text-slate-100 antialiased selection:bg-red-500 selection:text-white">
+      {/* Top Header Bar */}
+      <header className="sticky top-0 z-40 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl transition duration-200">
+        <div className="mx-auto max-w-7xl px-4 py-3 md:px-8 flex items-center justify-between gap-4">
+          
+          {/* Brand & Logo */}
+          <div className="flex items-center gap-4">
+            <Link to="/dashboard" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-red-950/40 group-hover:scale-105 transition duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base font-bold tracking-tight text-white flex items-center gap-2">
+                  LifeLedger
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">
+                  Blood Ecosystem
+                </span>
+              </div>
+            </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <button
-              onClick={onLogout}
-              type="button"
-              className="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
+
+          {/* User Status & Action Controls */}
+          <div className="flex items-center gap-2.5">
+            {/* User Role Badge */}
+            <Link
+              to="/dashboard?tab=profile"
+              className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${roleBadgeStyle} hover:opacity-80 transition`}
+              title="Click to view Profile"
             >
-              Logout
-            </button>
+              {roleLabels[userRole] || 'Member'}
+            </Link>
+
+            {/* Notification Bell (Redirects to Notifications Tab) */}
+            <Link
+              to="/dashboard?tab=notifications"
+              className="flex items-center justify-center p-1 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:bg-slate-700/60 transition"
+              title="Notifications"
+            >
+              <NotificationBell />
+            </Link>
+
+            {/* User Profile & Logout */}
+            <div className="h-6 w-px bg-slate-800 mx-1 hidden sm:block"></div>
+            
+            <div className="flex items-center gap-3">
+              {/* Clicking User Name redirects to Profile tab */}
+              <Link
+                to="/dashboard?tab=profile"
+                className="hidden md:flex flex-col text-right group hover:opacity-90 transition"
+                title="View Profile"
+              >
+                <span className="text-xs font-bold text-slate-200 group-hover:text-red-400 max-w-[140px] truncate transition">
+                  {profile?.displayName || 'User Profile'}
+                </span>
+                <span className="text-[10px] text-emerald-400 font-medium">Online • View Profile</span>
+              </Link>
+
+              <button
+                onClick={onLogout}
+                type="button"
+                className="py-1.5 px-3 rounded-lg bg-red-600/90 hover:bg-red-500 text-xs font-semibold text-white shadow-md shadow-red-950 transition duration-200"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Navigation Tabs Bar */}
+        {tabs.length > 0 && (
+          <div className="border-t border-slate-800/60 bg-slate-950/60 px-4 md:px-8">
+            <div className="mx-auto max-w-7xl flex gap-1 overflow-x-auto py-2 no-scrollbar">
+              {tabs.map((tab) => {
+                const isActive = tab.id === activeTab;
+                const href = tab.id === 'overview' ? '/dashboard' : `/dashboard?tab=${tab.id}`;
+
+                return (
+                  <Link
+                    key={tab.id}
+                    to={href}
+                    className={`shrink-0 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                      isActive
+                        ? 'bg-red-600 text-white shadow-sm shadow-red-950'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    {tab.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </header>
 
-      <nav className="mb-6 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTab;
-          const href = tab.id === 'overview' ? '/dashboard' : `/dashboard?tab=${tab.id}`;
+      {/* Main Page Body */}
+      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-6 md:px-8">
+        {children}
+      </main>
 
-          return (
-            <Link
-              key={tab.id}
-              to={href}
-              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-                isActive
-                  ? 'bg-gradient-to-r from-brand-600 to-cyan-500 text-white shadow-lg shadow-brand-600/30'
-                  : 'border border-slate-300 bg-white/75 text-slate-700 hover:bg-brand-50 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:bg-slate-800'
-              }`}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <main>{children}</main>
+      {/* Static Footer */}
+      <Footer />
     </div>
   );
 }

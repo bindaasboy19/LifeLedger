@@ -15,7 +15,9 @@ router.get('/health', (req, res) => {
   res.json({
     success: true,
     status: 'ok',
-    service: 'backend',
+    service: 'lifeledger-backend',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
     mongo: req.app.locals.mongoReady ? 'up' : 'down',
     firebase: firebaseState.initializedWith,
     firebaseWarning: firebaseState.warning

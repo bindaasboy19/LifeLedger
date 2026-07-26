@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import SectionCard from '../../components/common/SectionCard.jsx';
 import Badge from '../../components/common/Badge.jsx';
 
@@ -57,36 +57,36 @@ export default function OverviewPanel({ profile, stockItems, sosItems, campItems
   }, [campItems]);
 
   return (
-    <div className="grid gap-4 xl:grid-cols-3">
+    <div className="grid gap-5 xl:grid-cols-3">
       <SectionCard
         className="xl:col-span-2"
         title="Mission & Vision"
         subtitle="A coordinated and accountable blood support network for emergency and routine care"
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-rose-200/70 bg-gradient-to-br from-rose-50 to-red-100/80 p-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:to-red-900/20">
-            <h3 className="text-base font-bold text-rose-800 dark:text-rose-200">Our Aim</h3>
-            <p className="mt-2 text-sm text-rose-700 dark:text-rose-100/90">
+          <div className="rounded-2xl border border-red-900/50 bg-gradient-to-br from-red-950/60 to-rose-900/30 p-4 shadow-lg">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-red-400">Our Aim</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-300">
               Reduce avoidable treatment delay by connecting blood demand, community response, NGO-led camps, and institutional stock in one live workflow.
             </p>
           </div>
-          <div className="rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50 to-blue-100/80 p-4 dark:border-cyan-900/40 dark:from-cyan-950/40 dark:to-blue-900/20">
-            <h3 className="text-base font-bold text-cyan-800 dark:text-cyan-200">Role of {profile?.role || 'User'}</h3>
-            <p className="mt-2 text-sm text-cyan-700 dark:text-cyan-100/90">
+          <div className="rounded-2xl border border-cyan-900/50 bg-gradient-to-br from-cyan-950/60 to-blue-900/30 p-4 shadow-lg">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-400">Role of {profile?.role?.replace('_', ' ') || 'User'}</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-300">
               Your dashboard is tailored to surface only actions and metrics relevant to your role while keeping shared transparency intact.
             </p>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
           {blogCards.map((card) => (
             <article
               key={card.title}
-              className="rounded-xl border border-slate-200/80 bg-white/80 p-4 transition-transform duration-200 hover:-translate-y-0.5 dark:border-slate-700/80 dark:bg-slate-900/80"
+              className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 transition-transform duration-200 hover:-translate-y-0.5"
             >
               <Badge tone="neutral">{card.tag}</Badge>
-              <h4 className="mt-2 text-sm font-bold leading-snug">{card.title}</h4>
-              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{card.summary}</p>
+              <h4 className="mt-2 text-xs font-bold leading-snug text-slate-100">{card.title}</h4>
+              <p className="mt-2 text-[11px] leading-relaxed text-slate-400">{card.summary}</p>
             </article>
           ))}
         </div>
@@ -94,40 +94,40 @@ export default function OverviewPanel({ profile, stockItems, sosItems, campItems
 
       <SectionCard title="Live Insights" subtitle="Operational highlights from current real-time streams">
         <div className="space-y-3">
-          <div className="rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-900/30 dark:bg-amber-950/20">
-            <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-300">Lowest stock groups</p>
+          <div className="rounded-xl border border-amber-900/40 bg-amber-950/30 p-3.5">
+            <p className="text-[11px] uppercase font-bold tracking-wider text-amber-400">Lowest stock groups</p>
             {lowStockGroups.length === 0 ? (
-              <p className="mt-1 text-sm">No stock data yet.</p>
+              <p className="mt-1.5 text-xs text-slate-400">No stock data available yet.</p>
             ) : (
               lowStockGroups.map((row) => (
-                <p key={row.group} className="mt-1 text-sm font-semibold">
-                  {row.group}: {row.units} units
+                <p key={row.group} className="mt-1.5 text-xs font-bold text-slate-200">
+                  {row.group}: <span className="text-amber-400">{row.units} units</span>
                 </p>
               ))
             )}
           </div>
 
-          <div className="rounded-xl border border-blue-200/70 bg-blue-50/80 p-3 dark:border-blue-900/30 dark:bg-blue-950/20">
-            <p className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-300">SOS hotspots</p>
+          <div className="rounded-xl border border-blue-900/40 bg-blue-950/30 p-3.5">
+            <p className="text-[11px] uppercase font-bold tracking-wider text-blue-400">SOS hotspots</p>
             {cityHotspots.length === 0 ? (
-              <p className="mt-1 text-sm">No SOS records yet.</p>
+              <p className="mt-1.5 text-xs text-slate-400">No active SOS requests right now.</p>
             ) : (
               cityHotspots.map((row) => (
-                <p key={row.city} className="mt-1 text-sm font-semibold">
-                  {row.city}: {row.count} request(s)
+                <p key={row.city} className="mt-1.5 text-xs font-bold text-slate-200">
+                  {row.city}: <span className="text-blue-400">{row.count} request(s)</span>
                 </p>
               ))
             )}
           </div>
 
-          <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-            <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Next donation camp</p>
+          <div className="rounded-xl border border-emerald-900/40 bg-emerald-950/30 p-3.5">
+            <p className="text-[11px] uppercase font-bold tracking-wider text-emerald-400">Next donation camp</p>
             {!nextCamp ? (
-              <p className="mt-1 text-sm">No upcoming camp right now.</p>
+              <p className="mt-1.5 text-xs text-slate-400">No upcoming camp right now.</p>
             ) : (
               <>
-                <p className="mt-1 text-sm font-semibold">{nextCamp.name}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
+                <p className="mt-1.5 text-xs font-bold text-slate-200">{nextCamp.name}</p>
+                <p className="mt-0.5 text-[11px] text-slate-400">
                   {new Date(nextCamp.startAt).toLocaleString()} • {nextCamp.location?.city}
                 </p>
               </>
